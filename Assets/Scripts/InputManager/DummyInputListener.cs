@@ -19,4 +19,24 @@ public class DummyInputListener : MonoBehaviour, IInputListener
     {
         Debug.Log($"{GetType()} :: Jump");
     }
+
+    public void GrabLeft()
+    {
+        Debug.Log($"{GetType()} :: GrabLeft");
+    }
+
+    public void GrabRight()
+    {
+        Debug.Log($"{GetType()} :: GrabRight");
+    }
+
+    public void PunchLeft()
+    {
+        Debug.Log($"{GetType()} :: PunchLeft");
+    }
+
+    public void PunchRight()
+    {
+        Debug.Log($"{GetType()} :: PunchRight");
+    }
 }
