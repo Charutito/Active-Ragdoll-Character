@@ -38,7 +38,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": ""Jump"",
-                    ""type"": ""Button"",
+                    ""type"": ""PassThrough"",
                     ""id"": ""d4ae8e51-90c3-4f6b-a76a-0b3ab39ace6e"",
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
@@ -80,6 +80,15 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""HorizontalLook"",
+                    ""type"": ""Value"",
+                    ""id"": ""3e881ba1-88e4-4dd4-80d6-d7e9f6fcff77"",
+                    ""expectedControlType"": ""Vector2"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": true
                 }
             ],
             ""bindings"": [
@@ -247,6 +256,17 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
                     ""action"": ""PunchRight"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9d02154d-1f80-45e0-a37d-fa126ab62323"",
+                    ""path"": ""<Mouse>/delta"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""HorizontalLook"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -261,6 +281,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         m_Player_GrabRight = m_Player.FindAction("GrabRight", throwIfNotFound: true);
         m_Player_PunchLeft = m_Player.FindAction("PunchLeft", throwIfNotFound: true);
         m_Player_PunchRight = m_Player.FindAction("PunchRight", throwIfNotFound: true);
+        m_Player_HorizontalLook = m_Player.FindAction("HorizontalLook", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -328,6 +349,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_GrabRight;
     private readonly InputAction m_Player_PunchLeft;
     private readonly InputAction m_Player_PunchRight;
+    private readonly InputAction m_Player_HorizontalLook;
     public struct PlayerActions
     {
         private @InputActions m_Wrapper;
@@ -338,6 +360,7 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         public InputAction @GrabRight => m_Wrapper.m_Player_GrabRight;
         public InputAction @PunchLeft => m_Wrapper.m_Player_PunchLeft;
         public InputAction @PunchRight => m_Wrapper.m_Player_PunchRight;
+        public InputAction @HorizontalLook => m_Wrapper.m_Player_HorizontalLook;
         public InputActionMap Get() { return m_Wrapper.m_Player; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -365,6 +388,9 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @PunchRight.started += instance.OnPunchRight;
             @PunchRight.performed += instance.OnPunchRight;
             @PunchRight.canceled += instance.OnPunchRight;
+            @HorizontalLook.started += instance.OnHorizontalLook;
+            @HorizontalLook.performed += instance.OnHorizontalLook;
+            @HorizontalLook.canceled += instance.OnHorizontalLook;
         }
 
         private void UnregisterCallbacks(IPlayerActions instance)
@@ -387,6 +413,9 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
             @PunchRight.started -= instance.OnPunchRight;
             @PunchRight.performed -= instance.OnPunchRight;
             @PunchRight.canceled -= instance.OnPunchRight;
+            @HorizontalLook.started -= instance.OnHorizontalLook;
+            @HorizontalLook.performed -= instance.OnHorizontalLook;
+            @HorizontalLook.canceled -= instance.OnHorizontalLook;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -412,5 +441,6 @@ public partial class @InputActions: IInputActionCollection2, IDisposable
         void OnGrabRight(InputAction.CallbackContext context);
         void OnPunchLeft(InputAction.CallbackContext context);
         void OnPunchRight(InputAction.CallbackContext context);
+        void OnHorizontalLook(InputAction.CallbackContext context);
     }
 }
