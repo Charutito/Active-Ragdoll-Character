@@ -142,7 +142,7 @@ GameObject:
   - component: {fileID: 92950586}
   - component: {fileID: 92950585}
   m_Layer: 0
-  m_Name: Cube (1)
+  m_Name: GrabBoxExample
   m_TagString: CanBeGrabbed
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -197,7 +197,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: b64ec3ba425c1a24182fba97080322a7, type: 2}
+  - {fileID: 2100000, guid: 17aa5e68be043a34aa11bd5323925163, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -240,7 +240,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &351644317
 GameObject:
@@ -352,7 +352,7 @@ GameObject:
   - component: {fileID: 467151772}
   - component: {fileID: 467151771}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: HeavyBox
   m_TagString: CanBeGrabbed
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -434,7 +434,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &705507993
 GameObject:
@@ -530,50 +530,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &768308740
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 768308742}
-  - component: {fileID: 768308741}
-  m_Layer: 0
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &768308741
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 768308740}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6140e9cba3104280b68e2ed06474aa8c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &768308742
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 768308740}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.7127223, y: -1.1023736, z: -8.58977}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -686,22 +642,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 853821725901430288, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
-      propertyPath: jumpForce
-      value: 16
-      objectReference: {fileID: 0}
-    - target: {fileID: 853821725901430288, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
-      propertyPath: turnSpeed
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 853821725901430288, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
-      propertyPath: reachSensitivity
-      value: 350
-      objectReference: {fileID: 0}
-    - target: {fileID: 853821725901430288, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
-      propertyPath: forwardIsCameraDirection
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 8342660944763910698, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -749,10 +689,6 @@ PrefabInstance:
     - target: {fileID: 8342660944763911101, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
       propertyPath: m_Name
       value: ActiveRagdoll_Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 8342660944763911101, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
