@@ -534,7 +534,7 @@ public class RagdollController : MonoBehaviour, IInputListener
     
     private void PlayerReach()
     {
-        MouseYAxisBody = Mathf.Clamp(MouseYAxisBody += (AimAxis.y / reachSensitivity), -0.9f, 0.9f);
+        MouseYAxisBody = Mathf.Clamp(MouseYAxisBody += (AimAxis.y / reachSensitivity), -0.1f, 0.1f);
         RagdollDict[BODY].Joint.targetRotation =  new Quaternion(MouseYAxisBody, 0, 0, 1);
         
         if(GrabLeftValue != 0 && !punchingLeft)
