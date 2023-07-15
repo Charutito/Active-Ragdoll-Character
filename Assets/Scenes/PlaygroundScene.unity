@@ -690,6 +690,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ActiveRagdoll_Player
       objectReference: {fileID: 0}
+    - target: {fileID: 8342660944763911101, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d4c941322bd9b1847b8547594bbe4fbc, type: 3}
 --- !u!1 &1963753579

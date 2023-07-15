@@ -10,10 +10,6 @@ public class RagdollController : MonoBehaviour, IInputListener
     
     [SerializeField] private Transform centerOfMass;
     
-    [Header("Hand Dependencies")]
-    [SerializeField] private RagdollHandContact grabRight;
-    [SerializeField] private RagdollHandContact grabLeft;
-
     [Header("Movement Properties")]
     public bool forwardIsCameraDirection = true;
     public float moveSpeed = 10f;
@@ -94,7 +90,7 @@ public class RagdollController : MonoBehaviour, IInputListener
     [HideInInspector] public bool punchingRight;
     [HideInInspector] public bool punchingLeft;
     
-    private Camera cam;
+    [SerializeField] private Camera cam;
     private Vector3 Direction;
     private Vector3 CenterOfMassPoint;
     
@@ -118,7 +114,7 @@ public class RagdollController : MonoBehaviour, IInputListener
     
     void Awake()
     {
-        cam = Camera.main;
+        //cam = Camera.main;
         InputManager.Instance.RegisterListener(this);
 
         SetupJointDrives();
@@ -534,7 +530,7 @@ public class RagdollController : MonoBehaviour, IInputListener
     
     private void PlayerReach()
     {
-        MouseYAxisBody = Mathf.Clamp(MouseYAxisBody += (AimAxis.y / reachSensitivity), -0.1f, 0.1f);
+        MouseYAxisBody = Mathf.Clamp(MouseYAxisBody += (AimAxis.y / reachSensitivity), -0.2f, 0.1f);
         RagdollDict[BODY].Joint.targetRotation =  new Quaternion(MouseYAxisBody, 0, 0, 1);
         
         if(GrabLeftValue != 0 && !punchingLeft)
