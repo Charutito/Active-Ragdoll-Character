@@ -5,7 +5,7 @@
 
 This Unity project provides a solution for creating active ragdoll character. It includes a tool that allows you to apply an active ragdoll system to other rigged characters easily. The active ragdoll system gives your characters more realistic physics-based movement and interactions. 
 
-![image](https://github.com/matieme/Active-Ragdoll-Character/assets/14026025/a33034ee-af65-4811-baad-12e664b4c5fd)
+![image](https://github.com/matieme/Active-Ragdoll-Character/assets/14026025/6555000a-0323-4ba8-9594-b7f6e3cb9e5f)
 
 
 ## Features
