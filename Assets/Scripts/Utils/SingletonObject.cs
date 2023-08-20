@@ -21,4 +21,10 @@ public class SingletonObject<T> : MonoBehaviour where T : MonoBehaviour
             return instance;
         }
     }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetInstance()
+    {
+        instance = null;
+    }
 }

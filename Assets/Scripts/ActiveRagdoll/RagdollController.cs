@@ -512,79 +512,58 @@ public class RagdollController : MonoBehaviour
         MouseYAxisBody = Mathf.Clamp(MouseYAxisBody += (inputHandler.AimAxis.y / reachSensitivity), -0.2f, 0.1f);
         RagdollDict[BODY].Joint.targetRotation = new Quaternion(MouseYAxisBody, 0, 0, 1);
 
-        if (inputHandler.GrabLeftValue != 0 && !punchingLeft)
+        HandleLeftSideReach();
+        HandleRightSideReach();
+    }
+
+    private void HandlePlayerReach(bool punchingSide, float grabValue, ref bool reachSideAxisUsed, string upperArmJoint,
+        string lowerArmJoint, bool isRightArm)
+    {
+        if (punchingSide)
+            return;
+        if (grabValue != 0)
         {
-            if (!reachLeftAxisUsed)
+            if (!reachSideAxisUsed)
             {
-                SetJointAngularDrives(UPPER_LEFT_ARM, in ReachStiffness);
-                SetJointAngularDrives(LOWER_LEFT_ARM, in ReachStiffness);
+                SetJointAngularDrives(upperArmJoint, in ReachStiffness);
+                SetJointAngularDrives(lowerArmJoint, in ReachStiffness);
                 SetJointAngularDrives(BODY, in CoreStiffness);
-                reachLeftAxisUsed = true;
-                reachLeftAxisUsed = true;
+                reachSideAxisUsed = true;
             }
 
+            int multiplier = isRightArm ? 1 : -1;
             MouseYAxisArms = Mathf.Clamp(MouseYAxisArms += (inputHandler.AimAxis.y / reachSensitivity), -1.2f, 1.2f);
-            RagdollDict[UPPER_LEFT_ARM].Joint.targetRotation =
-                new Quaternion(-0.58f - (MouseYAxisArms), -0.88f - (MouseYAxisArms), -0.8f, 1);
+            RagdollDict[upperArmJoint].Joint.targetRotation =
+                new Quaternion((0.58f + (MouseYAxisArms)) * multiplier, -0.88f - (MouseYAxisArms), 0.8f * multiplier,
+                    1);
         }
-
-        if (inputHandler.GrabLeftValue == 0 && !punchingLeft)
+        else
         {
-            if (reachLeftAxisUsed)
+            if (!reachSideAxisUsed)
+                return;
+            if (balanced)
             {
-                if (balanced)
-                {
-                    SetJointAngularDrives(UPPER_LEFT_ARM, in PoseOn);
-                    SetJointAngularDrives(LOWER_LEFT_ARM, in PoseOn);
-                    SetJointAngularDrives(BODY, in PoseOn);
-                }
-                else if (!balanced)
-                {
-                    SetJointAngularDrives(UPPER_LEFT_ARM, in DriveOff);
-                    SetJointAngularDrives(LOWER_LEFT_ARM, in DriveOff);
-                }
-
-                ResetPose = true;
-                reachLeftAxisUsed = false;
+                SetJointAngularDrives(upperArmJoint, in PoseOn);
+                SetJointAngularDrives(lowerArmJoint, in PoseOn);
+                SetJointAngularDrives(BODY, in PoseOn);
             }
-        }
-
-        if (inputHandler.GrabRightValue != 0 && !punchingRight)
-        {
-            if (!reachRightAxisUsed)
+            else
             {
-                SetJointAngularDrives(UPPER_RIGHT_ARM, in ReachStiffness);
-                SetJointAngularDrives(LOWER_RIGHT_ARM, in ReachStiffness);
-                SetJointAngularDrives(BODY, in CoreStiffness);
-                reachRightAxisUsed = true;
+                SetJointAngularDrives(upperArmJoint, in DriveOff);
+                SetJointAngularDrives(lowerArmJoint, in DriveOff);
             }
 
-            MouseYAxisArms = Mathf.Clamp(MouseYAxisArms += (inputHandler.AimAxis.y / reachSensitivity), -1.2f, 1.2f);
-            RagdollDict[UPPER_RIGHT_ARM].Joint.targetRotation =
-                new Quaternion(0.58f + (MouseYAxisArms), -0.88f - (MouseYAxisArms), 0.8f, 1);
-        }
-
-        if (inputHandler.GrabRightValue == 0 && !punchingRight)
-        {
-            if (reachRightAxisUsed)
-            {
-                if (balanced)
-                {
-                    SetJointAngularDrives(UPPER_RIGHT_ARM, in PoseOn);
-                    SetJointAngularDrives(LOWER_RIGHT_ARM, in PoseOn);
-                    SetJointAngularDrives(BODY, in PoseOn);
-                }
-                else if (!balanced)
-                {
-                    SetJointAngularDrives(UPPER_RIGHT_ARM, in DriveOff);
-                    SetJointAngularDrives(LOWER_RIGHT_ARM, in DriveOff);
-                }
-
-                ResetPose = true;
-                reachRightAxisUsed = false;
-            }
+            ResetPose = true;
+            reachSideAxisUsed = false;
         }
     }
+
+
+    private void HandleRightSideReach() => HandlePlayerReach(punchingRight, inputHandler.GrabRightValue,
+        ref reachRightAxisUsed, UPPER_RIGHT_ARM, LOWER_RIGHT_ARM, true);
+
+    private void HandleLeftSideReach() => HandlePlayerReach(punchingLeft, inputHandler.GrabLeftValue,
+        ref reachLeftAxisUsed, UPPER_LEFT_ARM, LOWER_LEFT_ARM, false);
 
     private void PerformPlayerPunch()
     {
