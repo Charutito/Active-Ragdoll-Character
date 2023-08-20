@@ -7,10 +7,14 @@ public class RagdollHandContact : MonoBehaviour
     public bool hasJoint;
 
     private const string CAN_BE_GRABBED = "CanBeGrabbed";
-
+    private IInputListener inputListener;
+    public void Init(IInputListener newInputListener)
+    {
+        inputListener = newInputListener;
+    }
     private void Update()
     {
-        HandleJointRelease(Left ? ragdollController.GrabLeftValue : ragdollController.GrabRightValue);
+        HandleJointRelease(Left ? inputListener.GrabLeftValue : inputListener.GrabRightValue);
     }
 
     private void HandleJointRelease(float reachAxisValue)
@@ -53,11 +57,11 @@ public class RagdollHandContact : MonoBehaviour
     {
         if (Left)
         {
-            return ragdollController.GrabLeftValue != 0 && !ragdollController.punchingLeft;
+            return inputListener.GrabLeftValue != 0 && !ragdollController.punchingLeft;
         }
         else
         {
-            return ragdollController.GrabRightValue != 0 && !ragdollController.punchingRight;
+            return inputListener.GrabRightValue != 0 && !ragdollController.punchingRight;
         }
     }
 

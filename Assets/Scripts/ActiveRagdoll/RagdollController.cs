@@ -1,30 +1,22 @@
 using System;
 using System.Collections;
 using System.Runtime.CompilerServices;
+using ActiveRagdoll;
 using UnityEngine;
 using Utils;
 
-public class RagdollController : MonoBehaviour, IInputListener
+public class RagdollController : MonoBehaviour
 {
     [SerializeField] private UDictionary<string, RagdollJoint> RagdollDict = new UDictionary<string, RagdollJoint>();
 
     [SerializeField] private Rigidbody rightHand;
     [SerializeField] private Rigidbody leftHand;
-
     [SerializeField] private Transform centerOfMass;
 
     [Header("Movement Properties")] public bool forwardIsCameraDirection = true;
     public float moveSpeed = 10f;
     public float turnSpeed = 6f;
     public float jumpForce = 18f;
-
-    public Vector2 MovementAxis { get; set; } = Vector2.zero;
-    public Vector2 AimAxis { get; set; }
-    public float JumpValue { get; set; } = 0;
-    public float GrabLeftValue { get; set; } = 0;
-    public float GrabRightValue { get; set; } = 0;
-    public bool PunchLeftValue { get; set; }
-    public bool PunchRightValue { get; set; }
 
     [Header("Balance Properties")] public bool autoGetUpWhenPossible = true;
     public bool useStepPrediction = true;
@@ -83,6 +75,7 @@ public class RagdollController : MonoBehaviour, IInputListener
     private bool reachLeftAxisUsed;
     private bool reachRightAxisUsed;
 
+    private readonly RagdollInputHandler inputHandler = new();
     [HideInInspector] public bool jumping;
     [HideInInspector] public bool isJumping;
     [HideInInspector] public bool inAir;
@@ -111,15 +104,24 @@ public class RagdollController : MonoBehaviour, IInputListener
     private Quaternion LowerLeftLegTarget;
 
     private static int groundLayer;
-    private WaitForSeconds punchDelayWaitTime = new WaitForSeconds(0.3f);
+    private readonly WaitForSeconds punchDelayWaitTime = new(0.3f);
 
     void Awake()
     {
-        //cam = Camera.main;
-        InputManager.Instance.RegisterListener(this);
         groundLayer = LayerMask.NameToLayer("Ground");
+        inputHandler.Init();
         SetupJointDrives();
         SetupOriginalPose();
+        SetupHandContacts();
+    }
+
+    private void SetupHandContacts()
+    {
+        RagdollHandContact[] handContacts = GetComponentsInChildren<RagdollHandContact>();
+        foreach (var handContact in handContacts)
+        {
+            handContact.Init(inputHandler);
+        }
     }
 
     private void SetupJointDrives()
@@ -168,7 +170,6 @@ public class RagdollController : MonoBehaviour, IInputListener
         if (balanced && useStepPrediction)
         {
             PerformStepPrediction();
-            UpdateCenterOfMass();
         }
 
         if (!useStepPrediction)
@@ -204,10 +205,10 @@ public class RagdollController : MonoBehaviour, IInputListener
             //buffer all changes to quaternion before applying to memory location
             Quaternion rootJointTargetRotation = rootJoint.targetRotation;
 
-            if (MovementAxis.x != 0)
+            if (inputHandler.MovementAxis.x != 0)
             {
                 rootJointTargetRotation = Quaternion.Lerp(rootJointTargetRotation,
-                    rootJointTargetRotation.DisplaceY(-MovementAxis.x * turnSpeed),
+                    rootJointTargetRotation.DisplaceY(-inputHandler.MovementAxis.x * turnSpeed),
                     6 * Time.fixedDeltaTime);
             }
 
@@ -256,7 +257,7 @@ public class RagdollController : MonoBehaviour, IInputListener
 
     private void PerformPlayerGetUpJumping()
     {
-        if (JumpValue > 0)
+        if (inputHandler.JumpValue > 0)
         {
             if (!jumpAxisUsed)
             {
@@ -403,18 +404,19 @@ public class RagdollController : MonoBehaviour, IInputListener
 
     private void MoveInCameraDirection()
     {
-        Direction = RagdollDict[ROOT].transform.rotation * new Vector3(MovementAxis.x, 0.0f, MovementAxis.y);
+        Direction = RagdollDict[ROOT].transform.rotation *
+                    new Vector3(inputHandler.MovementAxis.x, 0.0f, inputHandler.MovementAxis.y);
         Direction.y = 0f;
         Rigidbody rootRigidbody = RagdollDict[ROOT].Rigidbody;
         var velocity = rootRigidbody.velocity;
         rootRigidbody.velocity = Vector3.Lerp(velocity,
             (Direction * moveSpeed) + new Vector3(0, velocity.y, 0), 0.8f);
 
-        if (MovementAxis.x != 0 || MovementAxis.y != 0 && balanced)
+        if (inputHandler.MovementAxis.x != 0 || inputHandler.MovementAxis.y != 0 && balanced)
         {
             StartWalkingForward();
         }
-        else if (MovementAxis is { x: 0, y: 0 })
+        else if (inputHandler.MovementAxis is { x: 0, y: 0 })
         {
             StopWalkingForward();
         }
@@ -442,19 +444,19 @@ public class RagdollController : MonoBehaviour, IInputListener
 
     private void MoveInOwnDirection()
     {
-        if (MovementAxis.y != 0)
+        if (inputHandler.MovementAxis.y != 0)
         {
             var rootRigidbody = RagdollDict[ROOT].Rigidbody;
-            var v3 = rootRigidbody.transform.forward * (MovementAxis.y * moveSpeed);
+            var v3 = rootRigidbody.transform.forward * (inputHandler.MovementAxis.y * moveSpeed);
             v3.y = rootRigidbody.velocity.y;
             rootRigidbody.velocity = v3;
         }
 
-        if (MovementAxis.y > 0)
+        if (inputHandler.MovementAxis.y > 0)
         {
             StartWalkingForwardInOwnDirection();
         }
-        else if (MovementAxis.y < 0)
+        else if (inputHandler.MovementAxis.y < 0)
         {
             StartWalkingBackward();
         }
@@ -507,10 +509,10 @@ public class RagdollController : MonoBehaviour, IInputListener
 
     private void PlayerReach()
     {
-        MouseYAxisBody = Mathf.Clamp(MouseYAxisBody += (AimAxis.y / reachSensitivity), -0.2f, 0.1f);
+        MouseYAxisBody = Mathf.Clamp(MouseYAxisBody += (inputHandler.AimAxis.y / reachSensitivity), -0.2f, 0.1f);
         RagdollDict[BODY].Joint.targetRotation = new Quaternion(MouseYAxisBody, 0, 0, 1);
 
-        if (GrabLeftValue != 0 && !punchingLeft)
+        if (inputHandler.GrabLeftValue != 0 && !punchingLeft)
         {
             if (!reachLeftAxisUsed)
             {
@@ -521,12 +523,12 @@ public class RagdollController : MonoBehaviour, IInputListener
                 reachLeftAxisUsed = true;
             }
 
-            MouseYAxisArms = Mathf.Clamp(MouseYAxisArms += (AimAxis.y / reachSensitivity), -1.2f, 1.2f);
+            MouseYAxisArms = Mathf.Clamp(MouseYAxisArms += (inputHandler.AimAxis.y / reachSensitivity), -1.2f, 1.2f);
             RagdollDict[UPPER_LEFT_ARM].Joint.targetRotation =
                 new Quaternion(-0.58f - (MouseYAxisArms), -0.88f - (MouseYAxisArms), -0.8f, 1);
         }
 
-        if (GrabLeftValue == 0 && !punchingLeft)
+        if (inputHandler.GrabLeftValue == 0 && !punchingLeft)
         {
             if (reachLeftAxisUsed)
             {
@@ -547,7 +549,7 @@ public class RagdollController : MonoBehaviour, IInputListener
             }
         }
 
-        if (GrabRightValue != 0 && !punchingRight)
+        if (inputHandler.GrabRightValue != 0 && !punchingRight)
         {
             if (!reachRightAxisUsed)
             {
@@ -557,12 +559,12 @@ public class RagdollController : MonoBehaviour, IInputListener
                 reachRightAxisUsed = true;
             }
 
-            MouseYAxisArms = Mathf.Clamp(MouseYAxisArms += (AimAxis.y / reachSensitivity), -1.2f, 1.2f);
+            MouseYAxisArms = Mathf.Clamp(MouseYAxisArms += (inputHandler.AimAxis.y / reachSensitivity), -1.2f, 1.2f);
             RagdollDict[UPPER_RIGHT_ARM].Joint.targetRotation =
                 new Quaternion(0.58f + (MouseYAxisArms), -0.88f - (MouseYAxisArms), 0.8f, 1);
         }
 
-        if (GrabRightValue == 0 && !punchingRight)
+        if (inputHandler.GrabRightValue == 0 && !punchingRight)
         {
             if (reachRightAxisUsed)
             {
@@ -637,7 +639,7 @@ public class RagdollController : MonoBehaviour, IInputListener
     {
         yield return punchDelayWaitTime;
         //Mainly because we can't pass in ref of bool value to coroutine, if not using unsafe void*
-        bool punchValueToCheck = isRightArm ? PunchRightValue : PunchLeftValue;
+        bool punchValueToCheck = isRightArm ? inputHandler.PunchRightValue : inputHandler.PunchLeftValue;
         if (punchValueToCheck) yield break;
 
         upperArmJoint.targetRotation = upperArmTarget.Invoke();
@@ -645,10 +647,11 @@ public class RagdollController : MonoBehaviour, IInputListener
     }
 
     private void HandleLeftPunch() =>
-        HandlePunch(ref punchingLeft, PunchLeftValue, false, UPPER_LEFT_ARM, LOWER_LEFT_ARM, leftHand,
+        HandlePunch(ref punchingLeft, inputHandler.PunchLeftValue, false, UPPER_LEFT_ARM, LOWER_LEFT_ARM, leftHand,
             () => UpperLeftArmTarget, () => LowerLeftArmTarget);
 
-    private void HandleRightPunch() => HandlePunch(ref punchingRight, PunchRightValue, true, UPPER_RIGHT_ARM,
+    private void HandleRightPunch() => HandlePunch(ref punchingRight, inputHandler.PunchRightValue, true,
+        UPPER_RIGHT_ARM,
         LOWER_RIGHT_ARM, rightHand, () => UpperRightArmTarget, () => LowerLeftArmTarget);
 
     private void PerformWalking()
@@ -851,7 +854,6 @@ public class RagdollController : MonoBehaviour, IInputListener
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void UpdateCenterOfMass()
     {
-        //Be wary of this, it's called up to 2 times per frame
         Vector3 massPositionDisplacement = Vector3.zero;
         float totalMass = 0;
 
