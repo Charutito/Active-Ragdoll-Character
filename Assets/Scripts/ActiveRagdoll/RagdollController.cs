@@ -72,12 +72,6 @@ public class RagdollController : MonoBehaviour
     private Vector3 Direction;
     private Vector3 CenterOfMassPoint;
 
-    private JointDrive BalanceOn;
-    private JointDrive PoseOn;
-    private JointDrive CoreStiffness;
-    private JointDrive ReachStiffness;
-    private JointDrive DriveOff;
-
     private Quaternion HeadTarget;
     private Quaternion BodyTarget;
     private Quaternion UpperRightArmTarget;
@@ -88,6 +82,7 @@ public class RagdollController : MonoBehaviour
     private Quaternion LowerRightLegTarget;
     private Quaternion UpperLeftLegTarget;
     private Quaternion LowerLeftLegTarget;
+    [SerializeField] private RagdollJointHandler jointHandler;
 
     private static int groundLayer;
     private readonly WaitForSeconds punchDelayWaitTime = new(0.3f);
@@ -96,7 +91,6 @@ public class RagdollController : MonoBehaviour
     {
         groundLayer = LayerMask.NameToLayer("Ground");
         inputHandler.Init();
-        SetupJointDrives();
         SetupOriginalPose();
         SetupHandContacts();
     }
@@ -108,15 +102,6 @@ public class RagdollController : MonoBehaviour
         {
             handContact.Init(inputHandler);
         }
-    }
-
-    private void SetupJointDrives()
-    {
-        BalanceOn = JointDriveHelper.CreateJointDrive(balanceStrength);
-        PoseOn = JointDriveHelper.CreateJointDrive(limbStrength);
-        CoreStiffness = JointDriveHelper.CreateJointDrive(coreStrength);
-        ReachStiffness = JointDriveHelper.CreateJointDrive(armReachStiffness);
-        DriveOff = JointDriveHelper.CreateJointDrive(25);
     }
 
     private void SetupOriginalPose()
@@ -366,9 +351,10 @@ public class RagdollController : MonoBehaviour
             ResetPose = true;
     }
 
-    private void DeactivateRagdoll() => SetRagdollState(false, ref BalanceOn, ref PoseOn, true);
+    private void DeactivateRagdoll() =>
+        SetRagdollState(false, ref jointHandler.BalanceOn, ref jointHandler.PoseOn, true);
 
-    public void ActivateRagdoll() => SetRagdollState(true, ref DriveOff, ref DriveOff, false);
+    public void ActivateRagdoll() => SetRagdollState(true, ref jointHandler.DriveOff, ref jointHandler.DriveOff, false);
 
     private void SetJointAngularDrives(string jointName, in JointDrive jointDrive)
     {
@@ -453,13 +439,13 @@ public class RagdollController : MonoBehaviour
     }
 
     private void StartWalkingForwardInOwnDirection() =>
-        SetWalkMovingState(() => (!WalkForward && !moveAxisUsed), true, false, true, true, PoseOn);
+        SetWalkMovingState(() => (!WalkForward && !moveAxisUsed), true, false, true, true, jointHandler.PoseOn);
 
     private void StartWalkingBackward() =>
-        SetWalkMovingState(() => !WalkBackward && !moveAxisUsed, false, true, true, true, PoseOn);
+        SetWalkMovingState(() => !WalkBackward && !moveAxisUsed, false, true, true, true, jointHandler.PoseOn);
 
     private void StopWalking() => SetWalkMovingState(() => WalkForward || WalkBackward && moveAxisUsed, false, false,
-        false, false, DriveOff);
+        false, false, jointHandler.DriveOff);
 
     private void SetWalkMovingState(Func<bool> activationCondition, bool walkForwardSetState, bool walkBackwardSetState,
         bool isMoveAxisUsed, bool isKeyCurrentlyDown, in JointDrive legsJointDrive)
@@ -511,9 +497,9 @@ public class RagdollController : MonoBehaviour
         {
             if (!reachSideAxisUsed)
             {
-                SetJointAngularDrives(upperArmJoint, in ReachStiffness);
-                SetJointAngularDrives(lowerArmJoint, in ReachStiffness);
-                SetJointAngularDrives(RagdollParts.BODY, in CoreStiffness);
+                SetJointAngularDrives(upperArmJoint, in jointHandler.ReachStiffness);
+                SetJointAngularDrives(lowerArmJoint, in jointHandler.ReachStiffness);
+                SetJointAngularDrives(RagdollParts.BODY, in jointHandler.CoreStiffness);
                 reachSideAxisUsed = true;
             }
 
@@ -529,14 +515,14 @@ public class RagdollController : MonoBehaviour
                 return;
             if (balanced)
             {
-                SetJointAngularDrives(upperArmJoint, in PoseOn);
-                SetJointAngularDrives(lowerArmJoint, in PoseOn);
-                SetJointAngularDrives(RagdollParts.BODY, in PoseOn);
+                SetJointAngularDrives(upperArmJoint, in jointHandler.PoseOn);
+                SetJointAngularDrives(lowerArmJoint, in jointHandler.PoseOn);
+                SetJointAngularDrives(RagdollParts.BODY, in jointHandler.PoseOn);
             }
             else
             {
-                SetJointAngularDrives(upperArmJoint, in DriveOff);
-                SetJointAngularDrives(lowerArmJoint, in DriveOff);
+                SetJointAngularDrives(upperArmJoint, in jointHandler.DriveOff);
+                SetJointAngularDrives(lowerArmJoint, in jointHandler.DriveOff);
             }
 
             ResetPose = true;
@@ -592,7 +578,8 @@ public class RagdollController : MonoBehaviour
             lowerArmJoint.targetRotation = new Quaternion(-0.2f * punchRotationMultiplier, 0, 0, 1);
 
             handRigidbody.AddForce(RagdollDict[RagdollParts.ROOT].transform.forward * punchForce, ForceMode.Impulse);
-            RagdollDict[RagdollParts.BODY].Rigidbody.AddForce(RagdollDict[RagdollParts.BODY].transform.forward * punchForce, ForceMode.Impulse);
+            RagdollDict[RagdollParts.BODY].Rigidbody
+                .AddForce(RagdollDict[RagdollParts.BODY].transform.forward * punchForce, ForceMode.Impulse);
 
             StartCoroutine(PunchDelayCoroutine(isRightPunch, upperArmJoint, lowerArmJoint, upperArmTargetMethod,
                 lowerArmTargetMethod));
@@ -612,7 +599,8 @@ public class RagdollController : MonoBehaviour
     }
 
     private void HandleLeftPunch() =>
-        HandlePunch(ref punchingLeft, inputHandler.PunchLeftValue, false, RagdollParts.UPPER_LEFT_ARM, RagdollParts.LOWER_LEFT_ARM, leftHand,
+        HandlePunch(ref punchingLeft, inputHandler.PunchLeftValue, false, RagdollParts.UPPER_LEFT_ARM,
+            RagdollParts.LOWER_LEFT_ARM, leftHand,
             () => UpperLeftArmTarget, () => LowerLeftArmTarget);
 
     private void HandleRightPunch() => HandlePunch(ref punchingRight, inputHandler.PunchRightValue, true,
@@ -654,9 +642,11 @@ public class RagdollController : MonoBehaviour
     }
 
     private void ResetStepLeft() =>
-        ResetStep(RagdollParts.UPPER_LEFT_LEG, RagdollParts.LOWER_LEFT_LEG, in UpperLeftLegTarget, in LowerLeftLegTarget, 7f, 18f);
+        ResetStep(RagdollParts.UPPER_LEFT_LEG, RagdollParts.LOWER_LEFT_LEG, in UpperLeftLegTarget,
+            in LowerLeftLegTarget, 7f, 18f);
 
-    private void ResetStepRight() => ResetStep(RagdollParts.UPPER_RIGHT_LEG, RagdollParts.LOWER_RIGHT_LEG, in UpperRightLegTarget,
+    private void ResetStepRight() => ResetStep(RagdollParts.UPPER_RIGHT_LEG, RagdollParts.LOWER_RIGHT_LEG,
+        in UpperRightLegTarget,
         in LowerRightLegTarget, 8f, 17f);
 
     private void ResetStep(string upperLegLabel,
@@ -678,10 +668,12 @@ public class RagdollController : MonoBehaviour
         RagdollDict[RagdollParts.LEFT_FOOT].Rigidbody.AddForce(feetForce, ForceMode.Impulse);
     }
 
-    private void TakeStepLeft() => TakeStep(ref Step_L_timer, RagdollParts.LEFT_FOOT, ref StepLeft, ref StepRight, RagdollParts.UPPER_LEFT_LEG,
+    private void TakeStepLeft() => TakeStep(ref Step_L_timer, RagdollParts.LEFT_FOOT, ref StepLeft, ref StepRight,
+        RagdollParts.UPPER_LEFT_LEG,
         RagdollParts.LOWER_LEFT_LEG, RagdollParts.UPPER_RIGHT_LEG);
 
-    private void TakeStepRight() => TakeStep(ref Step_R_timer, RagdollParts.RIGHT_FOOT, ref StepRight, ref StepLeft, RagdollParts.UPPER_RIGHT_LEG,
+    private void TakeStepRight() => TakeStep(ref Step_R_timer, RagdollParts.RIGHT_FOOT, ref StepRight, ref StepLeft,
+        RagdollParts.UPPER_RIGHT_LEG,
         RagdollParts.LOWER_RIGHT_LEG, RagdollParts.UPPER_LEFT_LEG);
 
     private void TakeStep(ref float stepTimer,
@@ -771,10 +763,12 @@ public class RagdollController : MonoBehaviour
         }
     }
 
-    private void WalkBackwards() => Walk(RagdollParts.LEFT_FOOT, RagdollParts.RIGHT_FOOT, ref StepLeft, ref StepRight, ref Alert_Leg_Left,
+    private void WalkBackwards() => Walk(RagdollParts.LEFT_FOOT, RagdollParts.RIGHT_FOOT, ref StepLeft, ref StepRight,
+        ref Alert_Leg_Left,
         ref Alert_Leg_Right);
 
-    private void WalkForwards() => Walk(RagdollParts.RIGHT_FOOT, RagdollParts.LEFT_FOOT, ref StepRight, ref StepLeft, ref Alert_Leg_Right,
+    private void WalkForwards() => Walk(RagdollParts.RIGHT_FOOT, RagdollParts.LEFT_FOOT, ref StepRight, ref StepLeft,
+        ref Alert_Leg_Right,
         ref Alert_Leg_Left);
 
     private void PerformStepPrediction()
