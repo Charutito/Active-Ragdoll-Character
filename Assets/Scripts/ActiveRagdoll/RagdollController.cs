@@ -21,16 +21,12 @@ public class RagdollController : MonoBehaviour
     [Header("Balance Properties")] public bool autoGetUpWhenPossible = true;
     public bool useStepPrediction = true;
     public float balanceHeight = 2.5f;
-    public float balanceStrength = 5000f;
-    public float coreStrength = 1500f;
-    public float limbStrength = 500f;
 
     public float StepDuration = 0.2f;
     public float StepHeight = 1.7f;
     public float FeetMountForce = 25f;
 
     [Header("Reach Properties")] public float reachSensitivity = 25f;
-    public float armReachStiffness = 2000f;
 
     [Header("Actions")] public bool canBeKnockoutByImpact = true;
     public float requiredForceToBeKO = 20f;

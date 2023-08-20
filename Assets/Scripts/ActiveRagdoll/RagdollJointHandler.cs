@@ -5,9 +5,15 @@ namespace ActiveRagdoll
     [System.Serializable]
     public class RagdollJointHandler
     {
-        [SerializeField] private float balanceStrength = 5000f;
-        [SerializeField] private float coreStrength = 1500f;
-        [SerializeField] private float limbStrength = 500f;
+        [SerializeField, Tooltip("The balancing strength to be used by this ragdoll")]
+        private float balanceStrength = 5000f;
+
+        [SerializeField, Tooltip("The force to be applied in order to stiffen the core of the ragdoll")]
+        private float coreStrength = 1500f;
+
+        [SerializeField, Tooltip("Mati llena este dato porque no se que es xd")]
+        private float limbStrength = 500f;
+
         [SerializeField] private float armReachStiffness = 2000f;
 
         internal JointDrive BalanceOn;
