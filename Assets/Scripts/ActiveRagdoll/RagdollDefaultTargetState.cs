@@ -16,33 +16,24 @@ namespace ActiveRagdoll
         public Quaternion LowerRightLegTarget { get; private set; }
         public Quaternion UpperLeftLegTarget { get; private set; }
         public Quaternion LowerLeftLegTarget { get; private set; }
-        private UDictionary<string, RagdollJoint> ragdollJoints;
-        public RagdollDefaultTargetState(UDictionary<string, RagdollJoint> ragdollJoints)
+
+        public RagdollDefaultTargetState(RagdollJointHandler jointHandler)
         {
-            Assert.IsNotNull(ragdollJoints);
-            this.ragdollJoints = ragdollJoints;
-            SetupOriginalPose();
+            SetupOriginalPose(jointHandler);
         }
 
-        private void SetupOriginalPose()
+        private void SetupOriginalPose(RagdollJointHandler jointsHandler)
         {
-            BodyTarget = GetJointTargetRotation(RagdollParts.ROOT);
-            HeadTarget = GetJointTargetRotation(RagdollParts.HEAD);
-            UpperRightArmTarget = GetJointTargetRotation(RagdollParts.UPPER_RIGHT_ARM);
-            LowerRightArmTarget = GetJointTargetRotation(RagdollParts.LOWER_RIGHT_ARM);
-            UpperLeftArmTarget = GetJointTargetRotation(RagdollParts.UPPER_LEFT_ARM);
-            LowerLeftArmTarget = GetJointTargetRotation(RagdollParts.LOWER_LEFT_ARM);
-            UpperRightLegTarget = GetJointTargetRotation(RagdollParts.UPPER_RIGHT_LEG);
-            LowerRightLegTarget = GetJointTargetRotation(RagdollParts.LOWER_RIGHT_LEG);
-            UpperLeftLegTarget = GetJointTargetRotation(RagdollParts.UPPER_LEFT_LEG);
-            LowerLeftLegTarget = GetJointTargetRotation(RagdollParts.LOWER_LEFT_LEG);
-            ragdollJoints = null;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Quaternion GetJointTargetRotation(string jointName)
-        {
-            return ragdollJoints[jointName].Joint.targetRotation;
+            BodyTarget = jointsHandler.GetJointTargetRotation(RagdollParts.ROOT);
+            HeadTarget = jointsHandler.GetJointTargetRotation(RagdollParts.HEAD);
+            UpperRightArmTarget = jointsHandler.GetJointTargetRotation(RagdollParts.UPPER_RIGHT_ARM);
+            LowerRightArmTarget = jointsHandler.GetJointTargetRotation(RagdollParts.LOWER_RIGHT_ARM);
+            UpperLeftArmTarget = jointsHandler.GetJointTargetRotation(RagdollParts.UPPER_LEFT_ARM);
+            LowerLeftArmTarget = jointsHandler.GetJointTargetRotation(RagdollParts.LOWER_LEFT_ARM);
+            UpperRightLegTarget = jointsHandler.GetJointTargetRotation(RagdollParts.UPPER_RIGHT_LEG);
+            LowerRightLegTarget = jointsHandler.GetJointTargetRotation(RagdollParts.LOWER_RIGHT_LEG);
+            UpperLeftLegTarget = jointsHandler.GetJointTargetRotation(RagdollParts.UPPER_LEFT_LEG);
+            LowerLeftLegTarget = jointsHandler.GetJointTargetRotation(RagdollParts.LOWER_LEFT_LEG);
         }
     }
 }

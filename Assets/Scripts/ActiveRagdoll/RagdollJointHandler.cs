@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace ActiveRagdoll
@@ -16,11 +17,14 @@ namespace ActiveRagdoll
 
         [SerializeField] private float armReachStiffness = 2000f;
 
+        [SerializeField] private UDictionary<string, RagdollJoint> joints = new();
+
         internal JointDrive BalanceOn;
         internal JointDrive PoseOn;
         internal JointDrive CoreStiffness;
         internal JointDrive ReachStiffness;
         internal JointDrive DriveOff;
+
 
         public RagdollJointHandler()
         {
@@ -36,6 +40,18 @@ namespace ActiveRagdoll
             DriveOff = CreateJointDrive(25);
         }
 
+        internal void SetJointAngularDrives(string jointName, in JointDrive jointDrive)
+        {
+            joints[jointName].Joint.angularXDrive = jointDrive;
+            joints[jointName].Joint.angularYZDrive = jointDrive;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal Quaternion GetJointTargetRotation(string jointName)
+        {
+            return joints[jointName].Joint.targetRotation;
+        }
+
         private static JointDrive CreateJointDrive(float positionSpring)
         {
             var jointDrive = new JointDrive
@@ -45,6 +61,64 @@ namespace ActiveRagdoll
                 maximumForce = Mathf.Infinity
             };
             return jointDrive;
+        }
+
+        internal bool TryGetJointWithID(string jointID, out RagdollJoint joint)
+        {
+            bool gotJoint = joints.TryGetValue(jointID, out joint);
+#if UNITY_EDITOR || DEBUG
+            if (!gotJoint)
+                Debug.LogWarning($"Joint with id {jointID} not found");
+#endif
+            return gotJoint;
+        }
+
+        /// <summary>
+        /// Obtains a ragdoll joint with a specific ID. Only use if absolutely sure the joint exists
+        /// </summary>
+        /// <param name="jointID"></param>
+        /// <returns>The specified <see cref="RagdollJoint"/>></returns>
+        internal RagdollJoint GetRagdollJointWithID(string jointID)
+        {
+            if (!joints.TryGetValue(jointID, out var joint))
+            {
+#if UNITY_EDITOR || DEBUG
+                Debug.LogWarning($"Ragdoll joint with id {jointID} not found");
+#endif
+            }
+
+            return joint;
+        }
+
+
+        internal ConfigurableJoint GetConfigurableJointWithID(string jointID)
+        {
+            if (joints.TryGetValue(jointID, out var joint))
+            {
+                return joint.Joint;
+            }
+
+#if UNITY_EDITOR || DEBUG
+            Debug.LogWarning($"Configurable joint for Ragdolljoint with id {jointID} not found");
+#endif
+            return default;
+        }
+
+        public void GetCenterOfMass(out Vector3 CenterOfMassPoint, Transform centerOfMass)
+        {
+            Vector3 massPositionDisplacement = Vector3.zero;
+            float totalMass = 0;
+
+            foreach (var element in joints)
+            {
+                var joint = element.Value;
+                var mass = joint.Rigidbody.mass;
+                massPositionDisplacement += mass * joint.transform.position;
+                totalMass += mass;
+            }
+
+            CenterOfMassPoint = (massPositionDisplacement / totalMass);
+            centerOfMass.position = CenterOfMassPoint;
         }
     }
 }
