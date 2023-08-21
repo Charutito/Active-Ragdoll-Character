@@ -7,8 +7,7 @@ using Utils;
 
 public class RagdollController : MonoBehaviour
 {
-    [SerializeField] private Rigidbody rightHand;
-    [SerializeField] private Rigidbody leftHand;
+    [SerializeField] private RagdollJointHandler jointHandler;
     [SerializeField] private Transform centerOfMass;
 
     [Header("Movement Properties")] public bool forwardIsCameraDirection = true;
@@ -49,10 +48,12 @@ public class RagdollController : MonoBehaviour
     [SerializeField] private Camera cam;
     private Vector3 Direction;
     private Vector3 CenterOfMassPoint; //TODO: Check usage
-    [SerializeField] private RagdollJointHandler jointHandler;
+
     private RagdollDefaultTargetState defaultTargetState;
     private static int groundLayer;
     private readonly WaitForSeconds punchDelayWaitTime = new(0.3f);
+    private Rigidbody RightHandRigidBody => jointHandler.GetRigidBodyFromJoint(RagdollParts.RIGHT_HAND);
+    private Rigidbody LeftHandRigidBody => jointHandler.GetRigidBodyFromJoint(RagdollParts.LEFT_HAND);
 
     void Awake()
     {
@@ -213,7 +214,7 @@ public class RagdollController : MonoBehaviour
         {
             isJumping = true;
 
-            Rigidbody rootRigidbody = jointHandler.GetRagdollJointWithID(RagdollParts.ROOT).Rigidbody;
+            Rigidbody rootRigidbody = jointHandler.GetRigidBodyFromJoint(RagdollParts.ROOT);
             rootRigidbody.velocity = rootRigidbody.velocity.ModifyY(rootRigidbody.transform.up.y * jumpForce);
         }
 
@@ -271,7 +272,7 @@ public class RagdollController : MonoBehaviour
                !locomotionController.reachRightAxisUsed &&
                !locomotionController.reachLeftAxisUsed &&
                !locomotionController.balanced &&
-               jointHandler.GetRagdollJointWithID(RagdollParts.ROOT).Rigidbody.velocity.magnitude < 1f &&
+               jointHandler.GetRigidBodyFromJoint(RagdollParts.ROOT).velocity.magnitude < 1f &&
                autoGetUpWhenPossible;
     }
 
@@ -298,7 +299,7 @@ public class RagdollController : MonoBehaviour
         Direction = jointHandler.GetRagdollJointWithID(RagdollParts.ROOT).transform.rotation *
                     new Vector3(inputHandler.MovementAxis.x, 0.0f, inputHandler.MovementAxis.y);
         Direction.y = 0f;
-        Rigidbody rootRigidbody = jointHandler.GetRagdollJointWithID(RagdollParts.ROOT).Rigidbody;
+        Rigidbody rootRigidbody = jointHandler.GetRigidBodyFromJoint(RagdollParts.ROOT);
         var velocity = rootRigidbody.velocity;
         rootRigidbody.velocity = Vector3.Lerp(velocity,
             (Direction * moveSpeed) + new Vector3(0, velocity.y, 0), 0.8f);
@@ -337,7 +338,7 @@ public class RagdollController : MonoBehaviour
     {
         if (inputHandler.MovementAxis.y != 0)
         {
-            var rootRigidbody = jointHandler.GetRagdollJointWithID(RagdollParts.ROOT).Rigidbody;
+            var rootRigidbody = jointHandler.GetRigidBodyFromJoint(RagdollParts.ROOT);
             var v3 = rootRigidbody.transform.forward * (inputHandler.MovementAxis.y * moveSpeed);
             v3.y = rootRigidbody.velocity.y;
             rootRigidbody.velocity = v3;
@@ -526,12 +527,12 @@ public class RagdollController : MonoBehaviour
 
     private void HandleLeftPunch() =>
         HandlePunch(ref punchingLeft, inputHandler.PunchLeftValue, false, RagdollParts.UPPER_LEFT_ARM,
-            RagdollParts.LOWER_LEFT_ARM, leftHand,
+            RagdollParts.LOWER_LEFT_ARM, LeftHandRigidBody,
             () => defaultTargetState.UpperLeftArmTarget, () => defaultTargetState.LowerLeftArmTarget);
 
     private void HandleRightPunch() => HandlePunch(ref punchingRight, inputHandler.PunchRightValue, true,
         RagdollParts.UPPER_RIGHT_ARM,
-        RagdollParts.LOWER_RIGHT_ARM, rightHand, () => defaultTargetState.UpperRightArmTarget,
+        RagdollParts.LOWER_RIGHT_ARM, RightHandRigidBody, () => defaultTargetState.UpperRightArmTarget,
         () => defaultTargetState.LowerLeftArmTarget);
 
     private void PerformWalking()
@@ -591,8 +592,8 @@ public class RagdollController : MonoBehaviour
             lowerLegLerpMultiplier * Time.fixedDeltaTime);
 
         Vector3 feetForce = -Vector3.up * (FeetMountForce * Time.deltaTime);
-        jointHandler.GetRagdollJointWithID(RagdollParts.RIGHT_FOOT).Rigidbody.AddForce(feetForce, ForceMode.Impulse);
-        jointHandler.GetRagdollJointWithID(RagdollParts.LEFT_FOOT).Rigidbody.AddForce(feetForce, ForceMode.Impulse);
+        jointHandler.GetRigidBodyFromJoint(RagdollParts.RIGHT_FOOT).AddForce(feetForce, ForceMode.Impulse);
+        jointHandler.GetRigidBodyFromJoint(RagdollParts.LEFT_FOOT).AddForce(feetForce, ForceMode.Impulse);
     }
 
     private void TakeStepLeft() => TakeStep(ref locomotionController.stepLTimer, RagdollParts.LEFT_FOOT,
@@ -614,7 +615,7 @@ public class RagdollController : MonoBehaviour
         string upperOppositeJointLabel)
     {
         stepTimer += Time.fixedDeltaTime;
-        jointHandler.GetRagdollJointWithID(footLabel).Rigidbody
+        jointHandler.GetRigidBodyFromJoint(footLabel)
             .AddForce(-Vector3.up * (FeetMountForce * Time.deltaTime), ForceMode.Impulse);
 
         var upperLegJoint = jointHandler.GetConfigurableJointWithID(upperJointLabel);

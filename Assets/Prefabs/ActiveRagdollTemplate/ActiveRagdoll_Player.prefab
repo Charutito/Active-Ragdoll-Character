@@ -3168,44 +3168,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 67122c3deae63fc46aa427f277a4cf0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  RagdollDict:
-    keys:
-    - Root
-    - Body
-    - Head
-    - UpperRightArm
-    - LowerRightArm
-    - RightHand
-    - UpperLeftArm
-    - LowerLeftArm
-    - LeftHand
-    - UpperRightLeg
-    - LowerRightLeg
-    - RightFoot
-    - UpperLeftLeg
-    - LowerLeftLeg
-    - LeftFoot
-    values:
-    - {fileID: 4985531305610238155}
-    - {fileID: 2342578877390874844}
-    - {fileID: 8180284542250461611}
-    - {fileID: 5939825930290575603}
-    - {fileID: 2424591407695190332}
-    - {fileID: 7622080051543942553}
-    - {fileID: 1139281219103369986}
-    - {fileID: 2646510523600694781}
-    - {fileID: 5152617412082605911}
-    - {fileID: 6109431878821211215}
-    - {fileID: 6701170567278905216}
-    - {fileID: 7927863737550955148}
-    - {fileID: 7370826325351747278}
-    - {fileID: 2835265873350387129}
-    - {fileID: 6857027438714089387}
   rightHand: {fileID: 8342660944763911090}
   leftHand: {fileID: 8342660944763911089}
   centerOfMass: {fileID: 4185505338602700740}
-  grabRight: {fileID: 3016776706953809226}
-  grabLeft: {fileID: 308789990690968185}
   forwardIsCameraDirection: 1
   moveSpeed: 10
   turnSpeed: 5
@@ -3213,14 +3178,10 @@ MonoBehaviour:
   autoGetUpWhenPossible: 1
   useStepPrediction: 1
   balanceHeight: 2.5
-  balanceStrength: 5000
-  coreStrength: 1500
-  limbStrength: 500
   StepDuration: 0.2
   StepHeight: 1.7
   FeetMountForce: 25
   reachSensitivity: 350
-  armReachStiffness: 2000
   canBeKnockoutByImpact: 1
   requiredForceToBeKO: 20
   canPunch: 1
@@ -3230,6 +3191,45 @@ MonoBehaviour:
   inAir: 0
   punchingRight: 0
   punchingLeft: 0
+  cam: {fileID: 0}
+  jointHandler:
+    balanceStrength: 5000
+    coreStrength: 1500
+    limbStrength: 500
+    armReachStiffness: 2000
+    joints:
+      keys:
+      - Root
+      - Body
+      - Head
+      - UpperRightArm
+      - LowerRightArm
+      - RightHand
+      - UpperLeftArm
+      - LowerLeftArm
+      - LeftHand
+      - UpperRightLeg
+      - LowerRightLeg
+      - RightFoot
+      - UpperLeftLeg
+      - LowerLeftLeg
+      - LeftFoot
+      values:
+      - {fileID: 4985531305610238155}
+      - {fileID: 2342578877390874844}
+      - {fileID: 8180284542250461611}
+      - {fileID: 5939825930290575603}
+      - {fileID: 2424591407695190332}
+      - {fileID: 7622080051543942553}
+      - {fileID: 1139281219103369986}
+      - {fileID: 2646510523600694781}
+      - {fileID: 5152617412082605911}
+      - {fileID: 6109431878821211215}
+      - {fileID: 6701170567278905216}
+      - {fileID: 7927863737550955148}
+      - {fileID: 7370826325351747278}
+      - {fileID: 2835265873350387129}
+      - {fileID: 6857027438714089387}
 --- !u!1 &8342660944763911102
 GameObject:
   m_ObjectHideFlags: 0
@@ -3471,7 +3471,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ragdollController: {fileID: 853821725901430288}
   Left: 1
-  hasJoint: 0
 --- !u!1 &8342660944763911103
 GameObject:
   m_ObjectHideFlags: 0
@@ -3713,4 +3712,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ragdollController: {fileID: 853821725901430288}
   Left: 0
-  hasJoint: 0
