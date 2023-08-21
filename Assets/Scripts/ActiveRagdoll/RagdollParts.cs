@@ -15,5 +15,7 @@ namespace ActiveRagdoll
         internal const string LOWER_LEFT_LEG = "LowerLeftLeg";
         internal const string RIGHT_FOOT = "RightFoot";
         internal const string LEFT_FOOT = "LeftFoot";
+        internal const string RIGHT_HAND = "RightHand";
+        internal const string LEFT_HAND = "LeftHand";
     }
 }
