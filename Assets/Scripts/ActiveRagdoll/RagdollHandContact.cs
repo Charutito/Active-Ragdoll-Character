@@ -4,36 +4,37 @@ public class RagdollHandContact : MonoBehaviour
 {
     public RagdollController ragdollController;
     public bool Left;
-    public bool hasJoint;
+    private bool HasJoint => joint != null;
 
     private const string CAN_BE_GRABBED = "CanBeGrabbed";
     private IInputListener inputListener;
+    private FixedJoint joint;
+
     public void Init(IInputListener newInputListener)
     {
         inputListener = newInputListener;
     }
+
     private void Update()
     {
+        //TODO: Add grabValue change event
         HandleJointRelease(Left ? inputListener.GrabLeftValue : inputListener.GrabRightValue);
     }
 
     private void HandleJointRelease(float reachAxisValue)
     {
-        if (hasJoint && reachAxisValue == 0)
+        if (!HasJoint)
+            return;
+
+        if (reachAxisValue == 0)
         {
             DestroyJoint();
-        }
-
-        if (hasJoint && gameObject.GetComponent<FixedJoint>() == null)
-        {
-            hasJoint = false;
         }
     }
 
     private void DestroyJoint()
     {
-        gameObject.GetComponent<FixedJoint>().breakForce = 0;
-        hasJoint = false;
+        joint.breakForce = 0;
     }
 
 
@@ -50,7 +51,7 @@ public class RagdollHandContact : MonoBehaviour
 
     private bool CanGrab(Collision col)
     {
-        return col.gameObject.CompareTag(CAN_BE_GRABBED) && !hasJoint;
+        return col.gameObject.CompareTag(CAN_BE_GRABBED) && !HasJoint;
     }
 
     private bool CanPerformGrabAction()
@@ -67,9 +68,9 @@ public class RagdollHandContact : MonoBehaviour
 
     private void PerformGrabAction(Rigidbody connectedBody)
     {
-        hasJoint = true;
-        gameObject.AddComponent<FixedJoint>();
-        gameObject.GetComponent<FixedJoint>().breakForce = Mathf.Infinity;
-        gameObject.GetComponent<FixedJoint>().connectedBody = connectedBody;
+        // hasJoint = true;
+        joint = gameObject.AddComponent<FixedJoint>();
+        joint.breakForce = Mathf.Infinity;
+        joint.connectedBody = connectedBody;
     }
 }
