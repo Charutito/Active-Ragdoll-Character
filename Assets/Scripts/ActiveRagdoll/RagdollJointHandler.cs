@@ -63,6 +63,12 @@ namespace ActiveRagdoll
             return jointDrive;
         }
 
+        internal Rigidbody GetRigidBodyFromJoint(string jointID)
+        {
+            RagdollJoint joint = GetRagdollJointWithID(jointID);
+            return joint.Rigidbody;
+        }
+
         internal bool TryGetJointWithID(string jointID, out RagdollJoint joint)
         {
             bool gotJoint = joints.TryGetValue(jointID, out joint);

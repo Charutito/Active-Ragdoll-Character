@@ -16,7 +16,7 @@ public class CameraController : MonoBehaviour
     public float minAngle = -35.0f;
     public float maxAngle = -15.0f;
     
-    [SerializeField] private Camera camera;
+    [SerializeField] private new Camera camera;
     private float currentX = 0.0f;
     private float currentY = 0.0f;
     private Quaternion rotation;
