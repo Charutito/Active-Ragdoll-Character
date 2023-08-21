@@ -72,3 +72,9 @@ Contributions are welcome! If you have any improvements or bug fixes, feel free 
 ## Contact
 
 If you have any questions or suggestions, please feel free to contact me at [mf.milewski@gmail.com](mailto:mf.milewski@gmail.com).
+
+## Special Thanks
+
+[@eruandou](https://github.com/eruandou) - for code cleaning and help!
+
+
