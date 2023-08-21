@@ -67,19 +67,8 @@ public class RagdollController : MonoBehaviour
     [SerializeField] private Camera cam;
     private Vector3 Direction;
     private Vector3 CenterOfMassPoint;
-
-    private Quaternion HeadTarget;
-    private Quaternion BodyTarget;
-    private Quaternion UpperRightArmTarget;
-    private Quaternion LowerRightArmTarget;
-    private Quaternion UpperLeftArmTarget;
-    private Quaternion LowerLeftArmTarget;
-    private Quaternion UpperRightLegTarget;
-    private Quaternion LowerRightLegTarget;
-    private Quaternion UpperLeftLegTarget;
-    private Quaternion LowerLeftLegTarget;
     [SerializeField] private RagdollJointHandler jointHandler;
-
+    private RagdollDefaultTargetState DefaultTargetState;
     private static int groundLayer;
     private readonly WaitForSeconds punchDelayWaitTime = new(0.3f);
 
@@ -87,7 +76,7 @@ public class RagdollController : MonoBehaviour
     {
         groundLayer = LayerMask.NameToLayer("Ground");
         inputHandler.Init();
-        SetupOriginalPose();
+        DefaultTargetState = new RagdollDefaultTargetState(RagdollDict);
         SetupHandContacts();
     }
 
@@ -98,26 +87,6 @@ public class RagdollController : MonoBehaviour
         {
             handContact.Init(inputHandler);
         }
-    }
-
-    private void SetupOriginalPose()
-    {
-        BodyTarget = GetJointTargetRotation(RagdollParts.ROOT);
-        HeadTarget = GetJointTargetRotation(RagdollParts.HEAD);
-        UpperRightArmTarget = GetJointTargetRotation(RagdollParts.UPPER_RIGHT_ARM);
-        LowerRightArmTarget = GetJointTargetRotation(RagdollParts.LOWER_RIGHT_ARM);
-        UpperLeftArmTarget = GetJointTargetRotation(RagdollParts.UPPER_LEFT_ARM);
-        LowerLeftArmTarget = GetJointTargetRotation(RagdollParts.LOWER_LEFT_ARM);
-        UpperRightLegTarget = GetJointTargetRotation(RagdollParts.UPPER_RIGHT_LEG);
-        LowerRightLegTarget = GetJointTargetRotation(RagdollParts.LOWER_RIGHT_LEG);
-        UpperLeftLegTarget = GetJointTargetRotation(RagdollParts.UPPER_LEFT_LEG);
-        LowerLeftLegTarget = GetJointTargetRotation(RagdollParts.LOWER_LEFT_LEG);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Quaternion GetJointTargetRotation(string jointName)
-    {
-        return RagdollDict[jointName].Joint.targetRotation;
     }
 
     private void Update()
@@ -197,11 +166,11 @@ public class RagdollController : MonoBehaviour
     {
         if (ResetPose && !jumping)
         {
-            RagdollDict[RagdollParts.BODY].Joint.targetRotation = BodyTarget;
-            RagdollDict[RagdollParts.UPPER_RIGHT_ARM].Joint.targetRotation = UpperRightArmTarget;
-            RagdollDict[RagdollParts.LOWER_RIGHT_ARM].Joint.targetRotation = LowerRightArmTarget;
-            RagdollDict[RagdollParts.UPPER_LEFT_ARM].Joint.targetRotation = UpperLeftArmTarget;
-            RagdollDict[RagdollParts.LOWER_LEFT_ARM].Joint.targetRotation = LowerLeftArmTarget;
+            RagdollDict[RagdollParts.BODY].Joint.targetRotation = DefaultTargetState.BodyTarget;
+            RagdollDict[RagdollParts.UPPER_RIGHT_ARM].Joint.targetRotation = DefaultTargetState.UpperRightArmTarget;
+            RagdollDict[RagdollParts.LOWER_RIGHT_ARM].Joint.targetRotation = DefaultTargetState.LowerRightArmTarget;
+            RagdollDict[RagdollParts.UPPER_LEFT_ARM].Joint.targetRotation = DefaultTargetState.UpperLeftArmTarget;
+            RagdollDict[RagdollParts.LOWER_LEFT_ARM].Joint.targetRotation = DefaultTargetState.LowerLeftArmTarget;
 
             MouseYAxisArms = 0;
             ResetPose = false;
@@ -597,11 +566,12 @@ public class RagdollController : MonoBehaviour
     private void HandleLeftPunch() =>
         HandlePunch(ref punchingLeft, inputHandler.PunchLeftValue, false, RagdollParts.UPPER_LEFT_ARM,
             RagdollParts.LOWER_LEFT_ARM, leftHand,
-            () => UpperLeftArmTarget, () => LowerLeftArmTarget);
+            () => DefaultTargetState.UpperLeftArmTarget, () => DefaultTargetState.LowerLeftArmTarget);
 
     private void HandleRightPunch() => HandlePunch(ref punchingRight, inputHandler.PunchRightValue, true,
         RagdollParts.UPPER_RIGHT_ARM,
-        RagdollParts.LOWER_RIGHT_ARM, rightHand, () => UpperRightArmTarget, () => LowerLeftArmTarget);
+        RagdollParts.LOWER_RIGHT_ARM, rightHand, () => DefaultTargetState.UpperRightArmTarget,
+        () => DefaultTargetState.LowerLeftArmTarget);
 
     private void PerformWalking()
     {
@@ -638,17 +608,17 @@ public class RagdollController : MonoBehaviour
     }
 
     private void ResetStepLeft() =>
-        ResetStep(RagdollParts.UPPER_LEFT_LEG, RagdollParts.LOWER_LEFT_LEG, in UpperLeftLegTarget,
-            in LowerLeftLegTarget, 7f, 18f);
+        ResetStep(RagdollParts.UPPER_LEFT_LEG, RagdollParts.LOWER_LEFT_LEG, DefaultTargetState.UpperLeftLegTarget,
+            DefaultTargetState.LowerLeftLegTarget, 7f, 18f);
 
     private void ResetStepRight() => ResetStep(RagdollParts.UPPER_RIGHT_LEG, RagdollParts.LOWER_RIGHT_LEG,
-        in UpperRightLegTarget,
-        in LowerRightLegTarget, 8f, 17f);
+        DefaultTargetState.UpperRightLegTarget,
+        DefaultTargetState.LowerRightLegTarget, 8f, 17f);
 
     private void ResetStep(string upperLegLabel,
         string lowerLegLabel,
-        in Quaternion upperLegTarget,
-        in Quaternion lowerLegTarget,
+        Quaternion upperLegTarget,
+        Quaternion lowerLegTarget,
         float upperLegLerpMultiplier,
         float lowerLegLerpMultiplier)
     {
