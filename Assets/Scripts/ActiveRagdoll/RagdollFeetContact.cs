@@ -4,12 +4,26 @@ public class RagdollFeetContact : MonoBehaviour
 {
     [SerializeField] private RagdollController RagdollPlayer;
     private const string GROUND = "Ground";
-    
-    void OnCollisionEnter(Collision col)
+    private int groundLayer = -1;
+
+    private int GroundLayer
     {
-        if(!RagdollPlayer.isJumping && RagdollPlayer.inAir)
+        get
         {
-            if(col.gameObject.layer == LayerMask.NameToLayer(GROUND))
+            if (groundLayer == -1)
+            {
+                groundLayer = LayerMask.NameToLayer(GROUND);
+            }
+
+            return groundLayer;
+        }
+    }
+
+    private void OnCollisionEnter(Collision col)
+    {
+        if (!RagdollPlayer.isJumping && RagdollPlayer.inAir)
+        {
+            if (col.gameObject.layer == GroundLayer)
             {
                 RagdollPlayer.PlayerLanded();
             }
