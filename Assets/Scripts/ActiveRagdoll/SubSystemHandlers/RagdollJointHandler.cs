@@ -126,5 +126,15 @@ namespace ActiveRagdoll
             CenterOfMassPoint = (massPositionDisplacement / totalMass);
             centerOfMass.position = CenterOfMassPoint;
         }
+        
+        public void SetJointAngularDrivesForLegs(in JointDrive jointDrive)
+        {
+            SetJointAngularDrives(RagdollParts.UPPER_RIGHT_LEG, in jointDrive);
+            SetJointAngularDrives(RagdollParts.LOWER_RIGHT_LEG, in jointDrive);
+            SetJointAngularDrives(RagdollParts.UPPER_LEFT_LEG, in jointDrive);
+            SetJointAngularDrives(RagdollParts.LOWER_LEFT_LEG, in jointDrive);
+            SetJointAngularDrives(RagdollParts.RIGHT_FOOT, in jointDrive);
+            SetJointAngularDrives(RagdollParts.LEFT_FOOT, in jointDrive);
+        }
     }
 }
