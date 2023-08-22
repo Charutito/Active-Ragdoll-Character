@@ -24,6 +24,7 @@ namespace ActiveRagdoll
 
         private void SetupOriginalPose(RagdollJointHandler jointsHandler)
         {
+            //TODO: Consider baking this data into the prefab instead of calculating on startup.
             BodyTarget = jointsHandler.GetJointTargetRotation(RagdollParts.ROOT);
             HeadTarget = jointsHandler.GetJointTargetRotation(RagdollParts.HEAD);
             UpperRightArmTarget = jointsHandler.GetJointTargetRotation(RagdollParts.UPPER_RIGHT_ARM);

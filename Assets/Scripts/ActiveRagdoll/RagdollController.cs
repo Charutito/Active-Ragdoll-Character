@@ -39,14 +39,10 @@ public class RagdollController : MonoBehaviour
 
     private readonly RagdollInputHandler inputHandler = new();
     private RagdollLocomotionController locomotionController;
-    [HideInInspector] public bool jumping;
-    [HideInInspector] public bool isJumping;
-    [HideInInspector] public bool inAir;
-    [HideInInspector] public bool punchingRight;
-    [HideInInspector] public bool punchingLeft;
+    private RagdollState ragdollState = new();
+
 
     [SerializeField] private Camera cam;
-    private Vector3 Direction;
     private Vector3 CenterOfMassPoint; //TODO: Check usage
 
     private RagdollDefaultTargetState defaultTargetState;
@@ -55,13 +51,14 @@ public class RagdollController : MonoBehaviour
     private Rigidbody RightHandRigidBody => jointHandler.GetRigidBodyFromJoint(RagdollParts.RIGHT_HAND);
     private Rigidbody LeftHandRigidBody => jointHandler.GetRigidBodyFromJoint(RagdollParts.LEFT_HAND);
 
-    void Awake()
+    private void Awake()
     {
         groundLayer = LayerMask.NameToLayer("Ground");
         inputHandler.Init();
         locomotionController = new RagdollLocomotionController(jointHandler);
         defaultTargetState = new RagdollDefaultTargetState(jointHandler);
         SetupHandContacts();
+        SetupFeetContacts();
     }
 
     private void SetupHandContacts()
@@ -69,13 +66,22 @@ public class RagdollController : MonoBehaviour
         var handContacts = GetComponentsInChildren<RagdollHandContact>();
         foreach (var handContact in handContacts)
         {
-            handContact.Init(inputHandler);
+            handContact.Init(inputHandler, ragdollState);
+        }
+    }
+
+    private void SetupFeetContacts()
+    {
+        var feetContacts = GetComponentsInChildren<RagdollFeetContact>();
+        foreach (var feetContact in feetContacts)
+        {
+            feetContact.Init(ragdollState);
         }
     }
 
     private void Update()
     {
-        if (!inAir)
+        if (!ragdollState.inAir)
         {
             PlayerMovement();
 
@@ -153,35 +159,35 @@ public class RagdollController : MonoBehaviour
 
     private void ResetPlayerPose()
     {
-        if (locomotionController.resetPose && !jumping)
-        {
-            jointHandler.GetConfigurableJointWithID(RagdollParts.BODY).targetRotation = defaultTargetState.BodyTarget;
-            jointHandler.GetConfigurableJointWithID(RagdollParts.UPPER_RIGHT_ARM).targetRotation =
-                defaultTargetState.UpperRightArmTarget;
-            jointHandler.GetConfigurableJointWithID(RagdollParts.LOWER_RIGHT_ARM).targetRotation =
-                defaultTargetState.LowerRightArmTarget;
-            jointHandler.GetConfigurableJointWithID(RagdollParts.UPPER_LEFT_ARM).targetRotation =
-                defaultTargetState.UpperLeftArmTarget;
-            jointHandler.GetConfigurableJointWithID(RagdollParts.LOWER_LEFT_ARM).targetRotation =
-                defaultTargetState.LowerLeftArmTarget;
+        if (!locomotionController.resetPose || ragdollState.jumping)
+            return;
 
-            MouseYAxisArms = 0;
-            locomotionController.resetPose = false;
-        }
+        jointHandler.GetConfigurableJointWithID(RagdollParts.BODY).targetRotation = defaultTargetState.BodyTarget;
+        jointHandler.GetConfigurableJointWithID(RagdollParts.UPPER_RIGHT_ARM).targetRotation =
+            defaultTargetState.UpperRightArmTarget;
+        jointHandler.GetConfigurableJointWithID(RagdollParts.LOWER_RIGHT_ARM).targetRotation =
+            defaultTargetState.LowerRightArmTarget;
+        jointHandler.GetConfigurableJointWithID(RagdollParts.UPPER_LEFT_ARM).targetRotation =
+            defaultTargetState.UpperLeftArmTarget;
+        jointHandler.GetConfigurableJointWithID(RagdollParts.LOWER_LEFT_ARM).targetRotation =
+            defaultTargetState.LowerLeftArmTarget;
+
+        MouseYAxisArms = 0;
+        locomotionController.resetPose = false;
     }
 
     public void PlayerLanded()
     {
         if (CanResetPoseAfterLanding())
         {
-            inAir = false;
+            ragdollState.inAir = false;
             locomotionController.resetPose = true;
         }
     }
 
     private bool CanResetPoseAfterLanding()
     {
-        return inAir && !isJumping && !jumping;
+        return ragdollState.inAir && !ragdollState.isJumping && !ragdollState.jumping;
     }
 
     private void PerformPlayerGetUpJumping()
@@ -190,9 +196,9 @@ public class RagdollController : MonoBehaviour
         {
             if (!locomotionController.jumpAxisUsed)
             {
-                if (locomotionController.balanced && !inAir)
+                if (locomotionController.balanced && !ragdollState.inAir)
                 {
-                    jumping = true;
+                    ragdollState.jumping = true;
                 }
 
                 else if (!locomotionController.balanced)
@@ -210,24 +216,24 @@ public class RagdollController : MonoBehaviour
         }
 
 
-        if (jumping)
+        if (ragdollState.jumping)
         {
-            isJumping = true;
+            ragdollState.isJumping = true;
 
             Rigidbody rootRigidbody = jointHandler.GetRigidBodyFromJoint(RagdollParts.ROOT);
             rootRigidbody.velocity = rootRigidbody.velocity.ModifyY(rootRigidbody.transform.up.y * jumpForce);
         }
 
-        if (isJumping)
+        if (ragdollState.isJumping)
         {
             jumpingResetTimer += Time.fixedDeltaTime;
 
             if (jumpingResetTimer > 0.2f)
             {
                 jumpingResetTimer = 0.0f;
-                jumping = false;
-                isJumping = false;
-                inAir = true;
+                ragdollState.jumping = false;
+                ragdollState.isJumping = false;
+                ragdollState.inAir = true;
             }
         }
     }
@@ -267,8 +273,8 @@ public class RagdollController : MonoBehaviour
 
     private bool ShouldSetBalanced()
     {
-        return !inAir &&
-               !isJumping &&
+        return !ragdollState.inAir &&
+               !ragdollState.isJumping &&
                !locomotionController.reachRightAxisUsed &&
                !locomotionController.reachLeftAxisUsed &&
                !locomotionController.balanced &&
@@ -296,13 +302,13 @@ public class RagdollController : MonoBehaviour
 
     private void MoveInCameraDirection()
     {
-        Direction = jointHandler.GetRagdollJointWithID(RagdollParts.ROOT).transform.rotation *
-                    new Vector3(inputHandler.MovementAxis.x, 0.0f, inputHandler.MovementAxis.y);
-        Direction.y = 0f;
+        var direction = jointHandler.GetRagdollJointWithID(RagdollParts.ROOT).transform.rotation *
+                        new Vector3(inputHandler.MovementAxis.x, 0.0f, inputHandler.MovementAxis.y);
+        direction.y = 0f;
         Rigidbody rootRigidbody = jointHandler.GetRigidBodyFromJoint(RagdollParts.ROOT);
         var velocity = rootRigidbody.velocity;
         rootRigidbody.velocity = Vector3.Lerp(velocity,
-            (Direction * moveSpeed) + new Vector3(0, velocity.y, 0), 0.8f);
+            (direction * moveSpeed) + new Vector3(0, velocity.y, 0), 0.8f);
 
         if (inputHandler.MovementAxis.x != 0 || inputHandler.MovementAxis.y != 0 && locomotionController.balanced)
         {
@@ -458,10 +464,10 @@ public class RagdollController : MonoBehaviour
     }
 
 
-    private void HandleRightSideReach() => HandlePlayerReach(punchingRight, inputHandler.GrabRightValue,
+    private void HandleRightSideReach() => HandlePlayerReach(ragdollState.punchingRight, inputHandler.GrabRightValue,
         ref locomotionController.reachRightAxisUsed, RagdollParts.UPPER_RIGHT_ARM, RagdollParts.LOWER_RIGHT_ARM, true);
 
-    private void HandleLeftSideReach() => HandlePlayerReach(punchingLeft, inputHandler.GrabLeftValue,
+    private void HandleLeftSideReach() => HandlePlayerReach(ragdollState.punchingLeft, inputHandler.GrabLeftValue,
         ref locomotionController.reachLeftAxisUsed, RagdollParts.UPPER_LEFT_ARM, RagdollParts.LOWER_LEFT_ARM, false);
 
     private void PerformPlayerPunch()
@@ -526,18 +532,18 @@ public class RagdollController : MonoBehaviour
     }
 
     private void HandleLeftPunch() =>
-        HandlePunch(ref punchingLeft, inputHandler.PunchLeftValue, false, RagdollParts.UPPER_LEFT_ARM,
+        HandlePunch(ref ragdollState.punchingLeft, inputHandler.PunchLeftValue, false, RagdollParts.UPPER_LEFT_ARM,
             RagdollParts.LOWER_LEFT_ARM, LeftHandRigidBody,
             () => defaultTargetState.UpperLeftArmTarget, () => defaultTargetState.LowerLeftArmTarget);
 
-    private void HandleRightPunch() => HandlePunch(ref punchingRight, inputHandler.PunchRightValue, true,
+    private void HandleRightPunch() => HandlePunch(ref ragdollState.punchingRight, inputHandler.PunchRightValue, true,
         RagdollParts.UPPER_RIGHT_ARM,
         RagdollParts.LOWER_RIGHT_ARM, RightHandRigidBody, () => defaultTargetState.UpperRightArmTarget,
         () => defaultTargetState.LowerLeftArmTarget);
 
     private void PerformWalking()
     {
-        if (inAir)
+        if (ragdollState.inAir)
             return;
 
         if (locomotionController.walkForward)

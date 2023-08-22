@@ -1,3 +1,4 @@
+using ActiveRagdoll;
 using UnityEngine;
 
 public class RagdollFeetContact : MonoBehaviour
@@ -5,6 +6,7 @@ public class RagdollFeetContact : MonoBehaviour
     [SerializeField] private RagdollController RagdollPlayer;
     private const string GROUND = "Ground";
     private int groundLayer = -1;
+    private RagdollState ragdollState;
 
     private int GroundLayer
     {
@@ -19,14 +21,19 @@ public class RagdollFeetContact : MonoBehaviour
         }
     }
 
+    public void Init(RagdollState state)
+    {
+        ragdollState = state;
+    }
+
     private void OnCollisionEnter(Collision col)
     {
-        if (!RagdollPlayer.isJumping && RagdollPlayer.inAir)
+        if (ragdollState.isJumping || !ragdollState.inAir)
+            return;
+
+        if (col.gameObject.layer == GroundLayer)
         {
-            if (col.gameObject.layer == GroundLayer)
-            {
-                RagdollPlayer.PlayerLanded();
-            }
+            RagdollPlayer.PlayerLanded();
         }
     }
 }

@@ -1,3 +1,4 @@
+using ActiveRagdoll;
 using UnityEngine;
 
 public class RagdollHandContact : MonoBehaviour
@@ -9,10 +10,12 @@ public class RagdollHandContact : MonoBehaviour
     private const string CAN_BE_GRABBED = "CanBeGrabbed";
     private IInputListener inputListener;
     private FixedJoint joint;
+    private RagdollState ragdollState;
 
-    public void Init(IInputListener newInputListener)
+    public void Init(IInputListener newInputListener, RagdollState state)
     {
         inputListener = newInputListener;
+        ragdollState = state;
     }
 
     private void Update()
@@ -58,11 +61,11 @@ public class RagdollHandContact : MonoBehaviour
     {
         if (Left)
         {
-            return inputListener.GrabLeftValue != 0 && !ragdollController.punchingLeft;
+            return inputListener.GrabLeftValue != 0 && !ragdollState.punchingLeft;
         }
         else
         {
-            return inputListener.GrabRightValue != 0 && !ragdollController.punchingRight;
+            return inputListener.GrabRightValue != 0 && !ragdollState.punchingRight;
         }
     }
 
