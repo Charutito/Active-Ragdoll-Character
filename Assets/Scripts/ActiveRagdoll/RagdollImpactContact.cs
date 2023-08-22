@@ -1,14 +1,23 @@
+using ActiveRagdoll;
 using UnityEngine;
 
 public class RagdollImpactContact : MonoBehaviour
 {
-    public RagdollController ragdollController;
+    private RagdollImpactHandler ragdollImpactHandler;
+    private RagdollLocomotionController locomotionController;
 
-    void OnCollisionEnter(Collision col)
+    public void Init(RagdollImpactHandler impactHandler, RagdollLocomotionController locomotionController)
     {
-        if (ragdollController.canBeKnockoutByImpact && col.relativeVelocity.magnitude > ragdollController.requiredForceToBeKO)
-        {
-            ragdollController.ActivateRagdoll();
-        }
+        ragdollImpactHandler = impactHandler;
+        this.locomotionController = locomotionController;
+    }
+
+    private void OnCollisionEnter(Collision col)
+    {
+        if (!ragdollImpactHandler.canBeKnockoutByImpact ||
+            col.relativeVelocity.magnitude < ragdollImpactHandler.requiredForceToBeKO)
+            return;
+
+        locomotionController.ActivateRagdoll();
     }
 }

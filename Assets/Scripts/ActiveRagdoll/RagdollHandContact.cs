@@ -1,35 +1,43 @@
+using ActiveRagdoll;
 using UnityEngine;
 
 public class RagdollHandContact : MonoBehaviour
 {
     public RagdollController ragdollController;
     public bool Left;
-    public bool hasJoint;
+    private bool HasJoint => joint != null;
 
     private const string CAN_BE_GRABBED = "CanBeGrabbed";
+    private IInputListener inputListener;
+    private FixedJoint joint;
+    private RagdollState ragdollState;
+
+    public void Init(IInputListener newInputListener, RagdollState state)
+    {
+        inputListener = newInputListener;
+        ragdollState = state;
+    }
 
     private void Update()
     {
-        HandleJointRelease(Left ? ragdollController.GrabLeftValue : ragdollController.GrabRightValue);
+        //TODO: Add grabValue change event
+        HandleJointRelease(Left ? inputListener.GrabLeftValue : inputListener.GrabRightValue);
     }
 
     private void HandleJointRelease(float reachAxisValue)
     {
-        if (hasJoint && reachAxisValue == 0)
+        if (!HasJoint)
+            return;
+
+        if (reachAxisValue == 0)
         {
             DestroyJoint();
-        }
-
-        if (hasJoint && gameObject.GetComponent<FixedJoint>() == null)
-        {
-            hasJoint = false;
         }
     }
 
     private void DestroyJoint()
     {
-        gameObject.GetComponent<FixedJoint>().breakForce = 0;
-        hasJoint = false;
+        joint.breakForce = 0;
     }
 
 
@@ -46,26 +54,26 @@ public class RagdollHandContact : MonoBehaviour
 
     private bool CanGrab(Collision col)
     {
-        return col.gameObject.CompareTag(CAN_BE_GRABBED) && !hasJoint;
+        return col.gameObject.CompareTag(CAN_BE_GRABBED) && !HasJoint;
     }
 
     private bool CanPerformGrabAction()
     {
         if (Left)
         {
-            return ragdollController.GrabLeftValue != 0 && !ragdollController.punchingLeft;
+            return inputListener.GrabLeftValue != 0 && !ragdollState.punchingLeft;
         }
         else
         {
-            return ragdollController.GrabRightValue != 0 && !ragdollController.punchingRight;
+            return inputListener.GrabRightValue != 0 && !ragdollState.punchingRight;
         }
     }
 
     private void PerformGrabAction(Rigidbody connectedBody)
     {
-        hasJoint = true;
-        gameObject.AddComponent<FixedJoint>();
-        gameObject.GetComponent<FixedJoint>().breakForce = Mathf.Infinity;
-        gameObject.GetComponent<FixedJoint>().connectedBody = connectedBody;
+        // hasJoint = true;
+        joint = gameObject.AddComponent<FixedJoint>();
+        joint.breakForce = Mathf.Infinity;
+        joint.connectedBody = connectedBody;
     }
 }
