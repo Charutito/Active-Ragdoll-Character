@@ -29,7 +29,7 @@ namespace ActiveRagdoll
             jointHandler = jointsHandler;
         }
 
-        public void SetRagdollState(bool shouldRagdoll, ref JointDrive rootJointDrive,
+        private void SetRagdollState(bool shouldRagdoll, ref JointDrive rootJointDrive,
             ref JointDrive poseJointDrive,
             bool shouldResetPose)
         {
@@ -61,6 +61,13 @@ namespace ActiveRagdoll
             if (shouldResetPose)
                 resetPose = true;
         }
+
+        public void DeactivateRagdoll() =>
+            SetRagdollState(false, ref jointHandler.BalanceOn, ref jointHandler.PoseOn, true);
+
+        public void ActivateRagdoll() =>
+            SetRagdollState(true, ref jointHandler.DriveOff, ref jointHandler.DriveOff, false);
+
 
         internal void Walk(string forwardFootLabel, string backFootLabel, ref bool forwardFootState,
             ref bool backFootState, ref bool forwardAlertLeg, ref bool backAlertLeg)

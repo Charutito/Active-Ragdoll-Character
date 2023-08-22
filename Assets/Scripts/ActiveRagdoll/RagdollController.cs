@@ -9,7 +9,7 @@ public class RagdollController : MonoBehaviour
 {
     [SerializeField] private RagdollJointHandler jointHandler;
     [SerializeField] private Transform centerOfMass;
-
+    [SerializeField] private RagdollImpactHandler impactHandler;
     [Header("Movement Properties")] public bool forwardIsCameraDirection = true;
     public float moveSpeed = 10f;
     public float turnSpeed = 6f;
@@ -25,9 +25,7 @@ public class RagdollController : MonoBehaviour
 
     [Header("Reach Properties")] public float reachSensitivity = 25f;
 
-    [Header("Actions")] public bool canBeKnockoutByImpact = true;
-    public float requiredForceToBeKO = 20f;
-    public bool canPunch = true;
+    [Header("Actions")] public bool canPunch = true;
     public float punchForce = 15f;
 
     //Hidden variables
@@ -39,7 +37,7 @@ public class RagdollController : MonoBehaviour
 
     private readonly RagdollInputHandler inputHandler = new();
     private RagdollLocomotionController locomotionController;
-    private RagdollState ragdollState = new();
+    private readonly RagdollState ragdollState = new();
 
 
     [SerializeField] private Camera cam;
@@ -59,6 +57,16 @@ public class RagdollController : MonoBehaviour
         defaultTargetState = new RagdollDefaultTargetState(jointHandler);
         SetupHandContacts();
         SetupFeetContacts();
+        SetupRagdollImpactContacts();
+    }
+
+    private void SetupRagdollImpactContacts()
+    {
+        var impactContacts = GetComponentsInChildren<RagdollImpactContact>();
+        foreach (var impactContact in impactContacts)
+        {
+            impactContact.Init(impactHandler, locomotionController);
+        }
     }
 
     private void SetupHandContacts()
@@ -203,7 +211,7 @@ public class RagdollController : MonoBehaviour
 
                 else if (!locomotionController.balanced)
                 {
-                    DeactivateRagdoll();
+                    locomotionController.DeactivateRagdoll();
                 }
             }
 
@@ -263,11 +271,11 @@ public class RagdollController : MonoBehaviour
 
         if (locomotionController.balanced)
         {
-            DeactivateRagdoll();
+            locomotionController.DeactivateRagdoll();
         }
         else
         {
-            ActivateRagdoll();
+            locomotionController.ActivateRagdoll();
         }
     }
 
@@ -282,11 +290,6 @@ public class RagdollController : MonoBehaviour
                autoGetUpWhenPossible;
     }
 
-    private void DeactivateRagdoll() =>
-        locomotionController.SetRagdollState(false, ref jointHandler.BalanceOn, ref jointHandler.PoseOn, true);
-
-    public void ActivateRagdoll() =>
-        locomotionController.SetRagdollState(true, ref jointHandler.DriveOff, ref jointHandler.DriveOff, false);
 
     private void PlayerMovement()
     {
