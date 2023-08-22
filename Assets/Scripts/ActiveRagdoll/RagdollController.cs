@@ -24,26 +24,18 @@ public class RagdollController : MonoBehaviour
     [Header("Actions")] public bool canPunch = true;
     public float punchForce = 15f;
 
-    //Hidden variables
-
-
     private readonly RagdollInputHandler inputHandler = new();
     private RagdollLocomotionController locomotionController;
     private readonly RagdollState ragdollState = new();
-
-
     [SerializeField] private Camera cam;
     private Vector3 CenterOfMassPoint; //TODO: Check usage
-
     private RagdollDefaultTargetState defaultTargetState;
-    private static int groundLayer;
     private readonly WaitForSeconds punchDelayWaitTime = new(0.3f);
     private Rigidbody RightHandRigidBody => jointHandler.GetRigidBodyFromJoint(RagdollParts.RIGHT_HAND);
     private Rigidbody LeftHandRigidBody => jointHandler.GetRigidBodyFromJoint(RagdollParts.LEFT_HAND);
 
     private void Awake()
     {
-        groundLayer = LayerMask.NameToLayer("Ground");
         inputHandler.Init();
         locomotionController = new RagdollLocomotionController(jointHandler, ragdollState);
         defaultTargetState = new RagdollDefaultTargetState(jointHandler);
