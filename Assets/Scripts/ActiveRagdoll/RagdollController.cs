@@ -15,10 +15,6 @@ public class RagdollController : MonoBehaviour
     public float turnSpeed = 6f;
     public float jumpForce = 18f;
 
-    [Header("Balance Properties")] public bool autoGetUpWhenPossible = true;
-    public bool useStepPrediction = true;
-    public float balanceHeight = 2.5f;
-
     public float StepDuration = 0.2f;
     public float StepHeight = 1.7f;
     public float FeetMountForce = 25f;
@@ -29,10 +25,6 @@ public class RagdollController : MonoBehaviour
     public float punchForce = 15f;
 
     //Hidden variables
-    private float jumpingResetTimer;
-    private float MouseYAxisArms;
-    private float MouseXAxisArms;
-    private float MouseYAxisBody;
 
 
     private readonly RagdollInputHandler inputHandler = new();
@@ -53,7 +45,7 @@ public class RagdollController : MonoBehaviour
     {
         groundLayer = LayerMask.NameToLayer("Ground");
         inputHandler.Init();
-        locomotionController = new RagdollLocomotionController(jointHandler);
+        locomotionController = new RagdollLocomotionController(jointHandler, ragdollState);
         defaultTargetState = new RagdollDefaultTargetState(jointHandler);
         SetupHandContacts();
         SetupFeetContacts();
@@ -101,17 +93,9 @@ public class RagdollController : MonoBehaviour
 
         PlayerReach();
 
-        if (locomotionController.balanced && useStepPrediction)
-        {
-            PerformStepPrediction();
-        }
+        locomotionController.HandleStepPrediction(centerOfMass.transform.position.z);
 
-        if (!useStepPrediction)
-        {
-            ResetWalkCycle();
-        }
-
-        GroundCheck();
+        locomotionController.GroundCheck();
         UpdateCenterOfMass();
     }
 
@@ -180,7 +164,7 @@ public class RagdollController : MonoBehaviour
         jointHandler.GetConfigurableJointWithID(RagdollParts.LOWER_LEFT_ARM).targetRotation =
             defaultTargetState.LowerLeftArmTarget;
 
-        MouseYAxisArms = 0;
+        ragdollState.mouseYAxisArms = 0;
         locomotionController.resetPose = false;
     }
 
@@ -202,7 +186,7 @@ public class RagdollController : MonoBehaviour
     {
         if (inputHandler.JumpValue > 0)
         {
-            if (!locomotionController.jumpAxisUsed)
+            if (!ragdollState.jumpAxisUsed)
             {
                 if (locomotionController.balanced && !ragdollState.inAir)
                 {
@@ -215,12 +199,12 @@ public class RagdollController : MonoBehaviour
                 }
             }
 
-            locomotionController.jumpAxisUsed = true;
+            ragdollState.jumpAxisUsed = true;
         }
 
         else
         {
-            locomotionController.jumpAxisUsed = false;
+            ragdollState.jumpAxisUsed = false;
         }
 
 
@@ -234,62 +218,17 @@ public class RagdollController : MonoBehaviour
 
         if (ragdollState.isJumping)
         {
-            jumpingResetTimer += Time.fixedDeltaTime;
+            ragdollState.jumpingResetTimer += Time.fixedDeltaTime;
 
-            if (jumpingResetTimer > 0.2f)
+            if (ragdollState.jumpingResetTimer > 0.2f)
             {
-                jumpingResetTimer = 0.0f;
+                ragdollState.jumpingResetTimer = 0.0f;
                 ragdollState.jumping = false;
                 ragdollState.isJumping = false;
                 ragdollState.inAir = true;
             }
         }
     }
-
-    private void GroundCheck()
-    {
-        Transform rootTransform = jointHandler.GetRagdollJointWithID(RagdollParts.ROOT).transform;
-        Ray ray = new Ray(rootTransform.position, Vector3.down);
-        bool isHittingGround = Physics.Raycast(ray, out _, balanceHeight, 1 << groundLayer);
-
-        if (!isHittingGround)
-        {
-            if (locomotionController.balanced)
-            {
-                locomotionController.balanced = false;
-            }
-        }
-        else if (ShouldSetBalanced())
-        {
-            locomotionController.balanced = true;
-        }
-
-        bool needsStateChange = (locomotionController.balanced == locomotionController.isRagdoll);
-
-        if (!needsStateChange)
-            return;
-
-        if (locomotionController.balanced)
-        {
-            locomotionController.DeactivateRagdoll();
-        }
-        else
-        {
-            locomotionController.ActivateRagdoll();
-        }
-    }
-
-    private bool ShouldSetBalanced()
-    {
-        return !ragdollState.inAir &&
-               !ragdollState.isJumping &&
-               !locomotionController.reachRightAxisUsed &&
-               !locomotionController.reachLeftAxisUsed &&
-               !locomotionController.balanced &&
-               jointHandler.GetRigidBodyFromJoint(RagdollParts.ROOT).velocity.magnitude < 1f &&
-               autoGetUpWhenPossible;
-    }
-
 
     private void PlayerMovement()
     {
@@ -325,21 +264,21 @@ public class RagdollController : MonoBehaviour
 
     private void StartWalkingForward()
     {
-        if (!locomotionController.walkForward && !locomotionController.moveAxisUsed)
+        if (!locomotionController.walkForward && !ragdollState.moveAxisUsed)
         {
             locomotionController.walkForward = true;
-            locomotionController.moveAxisUsed = true;
-            locomotionController.isKeyDown = true;
+            ragdollState.moveAxisUsed = true;
+            ragdollState.isKeyDown = true;
         }
     }
 
     private void StopWalkingForward()
     {
-        if (locomotionController.walkForward && locomotionController.moveAxisUsed)
+        if (locomotionController.walkForward && ragdollState.moveAxisUsed)
         {
             locomotionController.walkForward = false;
-            locomotionController.moveAxisUsed = false;
-            locomotionController.isKeyDown = false;
+            ragdollState.moveAxisUsed = false;
+            ragdollState.isKeyDown = false;
         }
     }
 
@@ -368,18 +307,18 @@ public class RagdollController : MonoBehaviour
     }
 
     private void StartWalkingForwardInOwnDirection() =>
-        SetWalkMovingState(() => (!locomotionController.walkForward && !locomotionController.moveAxisUsed), true, false,
+        SetWalkMovingState(() => (!locomotionController.walkForward && !ragdollState.moveAxisUsed), true, false,
             true, true,
             jointHandler.PoseOn);
 
     private void StartWalkingBackward() =>
-        SetWalkMovingState(() => !locomotionController.walkBackward && !locomotionController.moveAxisUsed, false, true,
+        SetWalkMovingState(() => !locomotionController.walkBackward && !ragdollState.moveAxisUsed, false, true,
             true, true,
             jointHandler.PoseOn);
 
     private void StopWalking() => SetWalkMovingState(
         () => locomotionController.walkForward ||
-              locomotionController.walkBackward && locomotionController.moveAxisUsed, false, false,
+              locomotionController.walkBackward && ragdollState.moveAxisUsed, false, false,
         false, false, jointHandler.DriveOff);
 
     private void SetWalkMovingState(Func<bool> activationCondition, bool walkForwardSetState, bool walkBackwardSetState,
@@ -398,8 +337,8 @@ public class RagdollController : MonoBehaviour
     {
         locomotionController.walkForward = walkForward;
         locomotionController.walkBackward = walkBackward;
-        locomotionController.moveAxisUsed = isMoveAxisUsed;
-        locomotionController.isKeyDown = isKeyCurrentlyDown;
+        ragdollState.moveAxisUsed = isMoveAxisUsed;
+        ragdollState.isKeyDown = isKeyCurrentlyDown;
         if (locomotionController.isRagdoll)
             SetJointAngularDrivesForLegs(in legsJointDrive);
     }
@@ -416,9 +355,10 @@ public class RagdollController : MonoBehaviour
 
     private void PlayerReach()
     {
-        MouseYAxisBody = Mathf.Clamp(MouseYAxisBody += (inputHandler.AimAxis.y / reachSensitivity), -0.2f, 0.1f);
+        ragdollState.mouseYAxisBody =
+            Mathf.Clamp(ragdollState.mouseYAxisBody += (inputHandler.AimAxis.y / reachSensitivity), -0.2f, 0.1f);
         jointHandler.GetConfigurableJointWithID(RagdollParts.BODY).targetRotation =
-            new Quaternion(MouseYAxisBody, 0, 0, 1);
+            new Quaternion(ragdollState.mouseYAxisBody, 0, 0, 1);
 
         HandleLeftSideReach();
         HandleRightSideReach();
@@ -440,9 +380,11 @@ public class RagdollController : MonoBehaviour
             }
 
             int multiplier = isRightArm ? 1 : -1;
-            MouseYAxisArms = Mathf.Clamp(MouseYAxisArms += (inputHandler.AimAxis.y / reachSensitivity), -1.2f, 1.2f);
+            ragdollState.mouseYAxisArms =
+                Mathf.Clamp(ragdollState.mouseYAxisArms += (inputHandler.AimAxis.y / reachSensitivity), -1.2f, 1.2f);
             jointHandler.GetConfigurableJointWithID(upperArmJoint).targetRotation =
-                new Quaternion((0.58f + (MouseYAxisArms)) * multiplier, -0.88f - (MouseYAxisArms), 0.8f * multiplier,
+                new Quaternion((0.58f + (ragdollState.mouseYAxisArms)) * multiplier,
+                    -0.88f - (ragdollState.mouseYAxisArms), 0.8f * multiplier,
                     1);
         }
         else
@@ -468,10 +410,10 @@ public class RagdollController : MonoBehaviour
 
 
     private void HandleRightSideReach() => HandlePlayerReach(ragdollState.punchingRight, inputHandler.GrabRightValue,
-        ref locomotionController.reachRightAxisUsed, RagdollParts.UPPER_RIGHT_ARM, RagdollParts.LOWER_RIGHT_ARM, true);
+        ref ragdollState.reachRightAxisUsed, RagdollParts.UPPER_RIGHT_ARM, RagdollParts.LOWER_RIGHT_ARM, true);
 
     private void HandleLeftSideReach() => HandlePlayerReach(ragdollState.punchingLeft, inputHandler.GrabLeftValue,
-        ref locomotionController.reachLeftAxisUsed, RagdollParts.UPPER_LEFT_ARM, RagdollParts.LOWER_LEFT_ARM, false);
+        ref ragdollState.reachLeftAxisUsed, RagdollParts.UPPER_LEFT_ARM, RagdollParts.LOWER_LEFT_ARM, false);
 
     private void PerformPlayerPunch()
     {
@@ -684,65 +626,9 @@ public class RagdollController : MonoBehaviour
         ref locomotionController.alertLegRight,
         ref locomotionController.alertLegLeft);
 
-    private void PerformStepPrediction()
-    {
-        if (!locomotionController.walkForward && !locomotionController.walkBackward)
-        {
-            locomotionController.stepRight = false;
-            locomotionController.stepLeft = false;
-            locomotionController.stepRTimer = 0;
-            locomotionController.stepLTimer = 0;
-            locomotionController.alertLegRight = false;
-            locomotionController.alertLegLeft = false;
-        }
-
-        float rightFootZPosition =
-            jointHandler.GetConfigurableJointWithID(RagdollParts.RIGHT_FOOT).transform.position.z;
-        float leftFootZPosition =
-            jointHandler.GetConfigurableJointWithID(RagdollParts.LEFT_FOOT).transform.position.z;
-
-        //TODO: Refactor to reduce amount of code here
-        if (centerOfMass.position.z < rightFootZPosition && centerOfMass.position.z < leftFootZPosition)
-        {
-            locomotionController.walkBackward = true;
-        }
-        else
-        {
-            if (!locomotionController.isKeyDown)
-            {
-                locomotionController.walkBackward = false;
-            }
-        }
-
-        if (centerOfMass.position.z > rightFootZPosition && centerOfMass.position.z > leftFootZPosition)
-        {
-            locomotionController.walkForward = true;
-        }
-        else
-        {
-            if (!locomotionController.isKeyDown)
-            {
-                locomotionController.walkForward = false;
-            }
-        }
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void UpdateCenterOfMass()
     {
         jointHandler.GetCenterOfMass(out CenterOfMassPoint, centerOfMass);
-    }
-
-    private void ResetWalkCycle()
-    {
-        if (!locomotionController.walkForward && !locomotionController.walkBackward)
-        {
-            locomotionController.stepRight = false;
-            locomotionController.stepLeft = false;
-            locomotionController.stepRTimer = 0;
-            locomotionController.stepLTimer = 0;
-            locomotionController.alertLegRight = false;
-            locomotionController.alertLegLeft = false;
-        }
     }
 }

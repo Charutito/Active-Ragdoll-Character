@@ -14,10 +14,10 @@ public class RagdollImpactContact : MonoBehaviour
 
     private void OnCollisionEnter(Collision col)
     {
-        if (ragdollImpactHandler.canBeKnockoutByImpact &&
-            col.relativeVelocity.magnitude > ragdollImpactHandler.requiredForceToBeKO)
-        {
-            locomotionController.ActivateRagdoll();
-        }
+        if (!ragdollImpactHandler.canBeKnockoutByImpact ||
+            col.relativeVelocity.magnitude < ragdollImpactHandler.requiredForceToBeKO)
+            return;
+
+        locomotionController.ActivateRagdoll();
     }
 }
